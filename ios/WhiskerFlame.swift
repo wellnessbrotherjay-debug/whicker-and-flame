@@ -1,202 +1,362 @@
 import SwiftUI
 import AVKit
 
-let copper = Color(red: 0.675, green: 0.243, blue: 0.106)
-let cream = Color(red: 0.969, green: 0.945, blue: 0.902)
-let olive = Color(red: 0.40, green: 0.41, blue: 0.26)
+// The live website, which serves the Agency OS recipe library.
 let apiBase = "https://whiskerflame.safetykat.com"
+let paper = Color(red: 0.969, green: 0.945, blue: 0.902)
+let surface = Color(red: 1.0, green: 0.988, blue: 0.965)
+let ink = Color(red: 0.161, green: 0.153, blue: 0.133)
+let muted = Color(red: 0.373, green: 0.345, blue: 0.31)
+let copper = Color(red: 0.675, green: 0.243, blue: 0.106)
+let olive = Color(red: 0.4, green: 0.408, blue: 0.263)
+let line = Color(red: 0.871, green: 0.831, blue: 0.776)
 
-struct Step: Codable {
- let title: String; let text: String; let seconds: Int?
- init(from decoder: Decoder) throws {
-  // The live site sends each step as plain text; the bundled preview sends title + text.
-  if let plain = try? decoder.singleValueContainer().decode(String.self) { title = ""; text = plain; seconds = nil; return }
-  let c = try decoder.container(keyedBy: CodingKeys.self)
-  title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""; text = try c.decode(String.self, forKey: .text); seconds = try c.decodeIfPresent(Int.self, forKey: .seconds)
- }
+// MARK: - Data (mirrors /api/catalog)
+
+struct Recipe: Codable, Identifiable, Hashable {
+ let id: String; let title: String; let description: String; let servings: Int; let image: String
+ let ingredients: [String]; let steps: [String]; let allergens: String; let categories: [String]
+ let difficulty: String; let totalMinutes: Int; let meatFree: Bool?; let editorialStatus: String?
 }
-struct Recipe: Codable, Identifiable {
- let id: String; let title: String; let subtitle: String; let category: String
- let time: Int; let servings: Int; let difficulty: String; let chef: String
- let image: String; let description: String; let ingredients: [String]; let steps: [Step]; let allergens: String
- let categories: [String]
- enum CodingKeys: String, CodingKey { case id, title, subtitle, category, categories, time, totalMinutes, servings, difficulty, chef, image, description, ingredients, steps, allergens }
- init(from decoder: Decoder) throws {
-  // Reads both the live site's catalog (categories, totalMinutes) and the bundled preview format.
-  let c = try decoder.container(keyedBy: CodingKeys.self)
-  id = try c.decode(String.self, forKey: .id); title = try c.decode(String.self, forKey: .title)
-  description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
-  subtitle = try c.decodeIfPresent(String.self, forKey: .subtitle) ?? description
-  category = try c.decodeIfPresent(String.self, forKey: .category) ?? (try c.decodeIfPresent([String].self, forKey: .categories))?.first ?? "Recipes"
-  time = try c.decodeIfPresent(Int.self, forKey: .time) ?? c.decodeIfPresent(Int.self, forKey: .totalMinutes) ?? 0
-  servings = try c.decode(Int.self, forKey: .servings); difficulty = try c.decodeIfPresent(String.self, forKey: .difficulty) ?? ""
-  chef = try c.decodeIfPresent(String.self, forKey: .chef) ?? ""; image = try c.decodeIfPresent(String.self, forKey: .image) ?? ""
-  ingredients = try c.decode([String].self, forKey: .ingredients); steps = try c.decode([Step].self, forKey: .steps)
-  allergens = try c.decodeIfPresent(String.self, forKey: .allergens) ?? ""
-  categories = try c.decodeIfPresent([String].self, forKey: .categories) ?? [category]
- }
- func encode(to encoder: Encoder) throws { var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(id, forKey: .id); try c.encode(title, forKey: .title) }
-}
-struct Episode: Codable, Identifiable { let id: String; let recipeId: String; let videoUrl: String }
-struct Catalog: Decodable {
- let recipes: [Recipe]; let episodes: [Episode]
- enum CodingKeys: String, CodingKey { case recipes, episodes }
- init(from decoder: Decoder) throws { let c = try decoder.container(keyedBy: CodingKeys.self); recipes = try c.decode([Recipe].self, forKey: .recipes); episodes = (try? c.decode([Episode].self, forKey: .episodes)) ?? [] }
-}
+struct Brand: Codable { let name: String; let tagline: String; let eyebrow: String; let promise: String; let footer: String }
+struct Film: Codable { let eyebrow: String; let title: String; let text: String; let src: String; let poster: String }
+struct Cast: Codable { let eyebrow: String; let title: String; let text: String; let image: String }
+struct Character: Codable, Identifiable { let id: String; let name: String; let role: String; let bio: String; let quote: String; let relationship: String; let traits: [String]; let flaw: String; let comedy: String }
+struct Collection: Codable, Identifiable { let id: String; let name: String; let text: String; let recipes: [String] }
+struct Season: Codable { let eyebrow: String; let title: String; let teaser: String; let text: String; let status: String }
+struct StoryEpisode: Codable, Identifiable { let n: Int; let title: String; let text: String; let recipe: String; let status: String; var id: Int { n } }
+struct Notes: Codable { let sample: String; let allergy: String; let cats: String }
+struct Site: Codable { let brand: Brand; let film: Film; let cast: Cast; let characters: [Character]; let collections: [Collection]; let season: Season; let episodes: [StoryEpisode]; let notes: Notes }
+struct Catalog: Codable { let recipes: [Recipe]; let site: Site }
 
 @MainActor final class Kitchen: ObservableObject {
- @Published var recipes: [Recipe] = []
- @Published var episodes: [Episode] = []
+ @Published var catalog: Catalog?
  @Published var saved: Set<String> = Set(UserDefaults.standard.stringArray(forKey: "savedRecipes") ?? [])
- @Published var status = "Bundled preview recipes"
+ @Published var online = false
+ var recipes: [Recipe] { catalog?.recipes ?? [] }
  init() {
-  if let url = Bundle.main.url(forResource: "catalog", withExtension: "json"), let data = try? Data(contentsOf: url), let catalog = try? JSONDecoder().decode(Catalog.self, from: data) { recipes = catalog.recipes }
+  if let url = Bundle.main.url(forResource: "catalog", withExtension: "json"), let data = try? Data(contentsOf: url) {
+   catalog = try? JSONDecoder().decode(Catalog.self, from: data)
+  }
  }
  func refresh() async {
-  do { var request = URLRequest(url: URL(string: apiBase + "/api/catalog")!); request.timeoutInterval = 5
+  do {
+   var request = URLRequest(url: URL(string: apiBase + "/api/catalog")!); request.timeoutInterval = 5
    let (data, response) = try await URLSession.shared.data(for: request)
-   guard (response as? HTTPURLResponse)?.statusCode == 200 else { return }
-   let catalog = try JSONDecoder().decode(Catalog.self, from: data)
-   recipes = catalog.recipes; episodes = catalog.episodes; status = "Synced with your kitchen"
-  } catch { status = "Offline · bundled recipes available"; print("catalog refresh failed:", error) }
+   guard (response as? HTTPURLResponse)?.statusCode == 200 else { online = false; return }
+   catalog = try JSONDecoder().decode(Catalog.self, from: data); online = true
+  } catch { online = false }
  }
+ func recipe(_ id: String) -> Recipe? { recipes.first { $0.id == id } }
  func toggle(_ id: String) { if saved.contains(id) { saved.remove(id) } else { saved.insert(id) }; UserDefaults.standard.set(Array(saved), forKey: "savedRecipes") }
 }
 
-@main struct WhiskerFlameApp: App {
+@main struct WhiskerHeatApp: App {
  @StateObject private var kitchen = Kitchen()
  @Environment(\.scenePhase) private var scenePhase
- var body: some Scene { WindowGroup { RootView().environmentObject(kitchen).tint(copper).task { await kitchen.refresh() }.onChange(of: scenePhase) { _, phase in if phase == .active { Task { await kitchen.refresh() } } } } }
-}
-struct Brand: View {
- var body: some View { HStack(spacing: 5) { Image(systemName: "flame.fill").font(.system(size: 16)).foregroundStyle(copper); (Text("Whisker") + Text("&").foregroundColor(copper) + Text("Flame")).font(.system(size: 24, weight: .semibold, design: .serif)).tracking(-1) } }
-}
-struct Eyebrow: View { let text: String; var body: some View { Text(text.uppercased()).font(.system(size: 9, weight: .semibold)).tracking(1.8).foregroundStyle(copper) } }
-struct FoodImage: View {
- let file: String; var height: CGFloat = 200
- var body: some View { let name = (file as NSString).lastPathComponent
-  GeometryReader { geometry in Group { if let url = Bundle.main.url(forResource: name, withExtension: nil), let image = UIImage(contentsOfFile: url.path) { Image(uiImage: image).resizable().scaledToFill() } else if let remote = URL(string: apiBase + file), file.hasPrefix("/") { AsyncImage(url: remote) { $0.resizable().scaledToFill() } placeholder: { Rectangle().fill(cream) } } else { Rectangle().fill(cream) } }.frame(width: geometry.size.width, height: height).clipped() }.frame(height: height)
+ var body: some Scene {
+  WindowGroup {
+   RootView().environmentObject(kitchen).tint(copper)
+    .task { await kitchen.refresh() }
+    .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await kitchen.refresh() } } }
+  }
  }
 }
-struct PrimaryButtonStyle: ButtonStyle { func makeBody(configuration: Configuration) -> some View { configuration.label.font(.system(size: 14, weight: .semibold)).frame(maxWidth: .infinity).padding(.vertical, 17).background(copper.opacity(configuration.isPressed ? 0.8 : 1)).foregroundStyle(.white).clipShape(Capsule()) } }
+
+// MARK: - Shared pieces
+
+struct Wordmark: View {
+ var size: CGFloat = 22
+ var body: some View { (Text("Whisker ") + Text("&").foregroundColor(copper).italic() + Text(" Heat").foregroundColor(copper)).font(.system(size: size, weight: .medium, design: .serif)) }
+}
+struct Eyebrow: View { let text: String; var body: some View { Text(text.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1.6).foregroundStyle(copper) } }
+struct Heading: View { let text: String; var size: CGFloat = 30; var body: some View { Text(text).font(.system(size: size, weight: .medium, design: .serif)).foregroundStyle(ink) } }
+
+/// Bundled image first (works offline), then the server copy.
+struct MediaImage: View {
+ let path: String; var height: CGFloat = 200
+ var body: some View {
+  let name = (path as NSString).lastPathComponent
+  Color.clear.frame(height: height).frame(maxWidth: .infinity)
+   .overlay {
+    if let url = Bundle.main.url(forResource: name, withExtension: nil, subdirectory: "Media"), let img = UIImage(contentsOfFile: url.path) {
+     Image(uiImage: img).resizable().scaledToFill()
+    } else {
+     AsyncImage(url: URL(string: apiBase + path)) { $0.resizable().scaledToFill() } placeholder: { surface }
+    }
+   }
+   .clipped().contentShape(Rectangle())
+ }
+}
+
+struct PrimaryButton: ButtonStyle {
+ func makeBody(configuration: Configuration) -> some View {
+  configuration.label.font(.system(size: 15, weight: .semibold)).padding(.horizontal, 22).frame(minHeight: 48)
+   .background(copper.opacity(configuration.isPressed ? 0.8 : 1)).foregroundStyle(.white).clipShape(Capsule())
+ }
+}
+
+struct Page<Content: View>: View {
+ @ViewBuilder let content: Content
+ var body: some View {
+  ScrollView { VStack(alignment: .leading, spacing: 22) { content }.padding(20).frame(maxWidth: 700, alignment: .leading).frame(maxWidth: .infinity) }
+   .scrollDismissesKeyboard(.interactively).background(paper.ignoresSafeArea())
+ }
+}
+
 struct RootView: View {
  var body: some View {
   TabView {
    NavigationStack { HomeView() }.tabItem { Label("Home", systemImage: "house") }
    NavigationStack { RecipesView() }.tabItem { Label("Recipes", systemImage: "fork.knife") }
-   NavigationStack { CookbookView() }.tabItem { Label("Cookbook", systemImage: "book") }
-   NavigationStack { ChefsView() }.tabItem { Label("Chefs", systemImage: "pawprint") }
+   NavigationStack { CharactersView() }.tabItem { Label("Characters", systemImage: "pawprint") }
+   NavigationStack { StoryView() }.tabItem { Label("Story", systemImage: "book") }
+   NavigationStack { KitchenView() }.tabItem { Label("My kitchen", systemImage: "heart") }
   }
  }
 }
+
 struct RecipeCard: View {
  @EnvironmentObject var kitchen: Kitchen
  let recipe: Recipe
- var body: some View { VStack(alignment: .leading, spacing: 0) {
-  NavigationLink { RecipeDetail(recipe: recipe) } label: { FoodImage(file: recipe.image, height: 200).overlay(alignment: .topLeading) { Text(recipe.category.uppercased()).font(.system(size: 9, weight: .semibold)).padding(9).background(cream).clipShape(Capsule()).padding(12) } }.buttonStyle(.plain)
-  VStack(alignment: .leading, spacing: 10) {
-   HStack { Label("\(recipe.time) min", systemImage: "clock"); Text("· \(recipe.difficulty) · Serves \(recipe.servings)") }.font(.system(size: 11)).foregroundStyle(.secondary)
-   HStack { NavigationLink { RecipeDetail(recipe: recipe) } label: { Text(recipe.title).font(.system(size: 25, design: .serif)).foregroundStyle(.primary).tracking(-0.6) }; Spacer(minLength: 4); Button { kitchen.toggle(recipe.id) } label: { Image(systemName: kitchen.saved.contains(recipe.id) ? "heart.fill" : "heart").frame(width: 44, height: 44) }.accessibilityLabel(kitchen.saved.contains(recipe.id) ? "Unsave recipe" : "Save recipe") }
-   Text(recipe.subtitle).font(.system(size: 12)).foregroundStyle(.secondary)
-   Divider().padding(.top, 6)
-   HStack { Text("Free starter recipe").font(.system(size: 10, weight: .semibold)).foregroundStyle(olive); Spacer(); Image(systemName: "arrow.right").foregroundStyle(copper) }
-  }.padding(17)
- }.background(Color.white.opacity(0.75)).clipShape(RoundedRectangle(cornerRadius: 17)).overlay(RoundedRectangle(cornerRadius: 17).stroke(Color.brown.opacity(0.15))) }
+ var body: some View {
+  VStack(alignment: .leading, spacing: 0) {
+   NavigationLink(value: recipe) { MediaImage(path: recipe.image, height: 190) }.buttonStyle(.plain)
+   VStack(alignment: .leading, spacing: 8) {
+    Text("\(recipe.totalMinutes) min · \(recipe.difficulty) · Serves \(recipe.servings)").font(.system(size: 12)).foregroundStyle(muted)
+    HStack(alignment: .top) {
+     NavigationLink(value: recipe) { Text(recipe.title).font(.system(size: 22, design: .serif)).foregroundStyle(ink).multilineTextAlignment(.leading) }.buttonStyle(.plain)
+     Spacer(minLength: 4)
+     Button { kitchen.toggle(recipe.id) } label: { Image(systemName: kitchen.saved.contains(recipe.id) ? "heart.fill" : "heart").frame(width: 44, height: 44) }
+      .accessibilityLabel(kitchen.saved.contains(recipe.id) ? "Unsave recipe" : "Save recipe")
+    }
+    Text(recipe.categories.joined(separator: " · ")).font(.system(size: 11, weight: .semibold)).foregroundStyle(olive)
+   }.padding(16)
+  }
+  .background(surface).clipShape(RoundedRectangle(cornerRadius: 20)).overlay(RoundedRectangle(cornerRadius: 20).stroke(line))
+ }
 }
+
+extension View {
+ func recipeDestination() -> some View { navigationDestination(for: Recipe.self) { RecipeDetail(recipe: $0) } }
+}
+
+// MARK: - Screens
+
 struct HomeView: View {
  @EnvironmentObject var kitchen: Kitchen
- var body: some View { ScrollView { VStack(alignment: .leading, spacing: 25) {
-  ZStack(alignment: .bottomLeading) { FoodImage(file: "chefs.png", height: 370); LinearGradient(colors: [.clear,.black.opacity(0.8)], startPoint: .center, endPoint: .bottom)
-   VStack(alignment: .leading, spacing: 13) { Text("WELCOME TO OUR KITCHEN").font(.system(size: 9, weight: .semibold)).tracking(1.7); Text("A little chaos.\nA lot of flavour.").font(.system(size: 37, weight: .medium, design: .serif)).tracking(-1); NavigationLink { RecipesView() } label: { HStack { Text("Let's cook"); Image(systemName: "arrow.right") }.font(.system(size: 13, weight: .semibold)).padding(.horizontal, 22).padding(.vertical, 13).background(copper).clipShape(Capsule()) } }.foregroundStyle(.white).padding(22)
-  }.frame(height: 370).clipShape(RoundedRectangle(cornerRadius: 18))
-  Text("Something delicious.").font(.system(size: 27, design: .serif))
-  if let first = kitchen.recipes.first { RecipeCard(recipe: first) }
-  Text("From the kitchen.").font(.system(size: 27, design: .serif))
-  if kitchen.episodes.isEmpty { HStack(alignment: .top, spacing: 14) { Image(systemName: "video").foregroundStyle(copper); VStack(alignment: .leading, spacing: 8) { Text("The first adventure is simmering.").font(.system(size: 20, design: .serif)); Text("New episodes will appear here when ready.").font(.system(size: 12)).foregroundStyle(.secondary) } }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(cream).clipShape(RoundedRectangle(cornerRadius: 14)) }
-  else { ForEach(kitchen.episodes) { ep in EpisodeView(episode: ep) } }
-  Text(kitchen.status + " · Draft recipe samples").font(.system(size: 10)).foregroundStyle(.secondary)
- }.padding(20) }.background(cream.opacity(0.45)).toolbar { ToolbarItem(placement: .principal) { Brand() } }.navigationBarTitleDisplayMode(.inline).refreshable { await kitchen.refresh() } }
+ var body: some View {
+  Page {
+   if let site = kitchen.catalog?.site {
+    Eyebrow(text: site.brand.eyebrow)
+    Wordmark(size: 44)
+    Text(site.brand.promise).font(.system(size: 17)).foregroundStyle(muted)
+    MediaImage(path: site.cast.image, height: 260).clipShape(RoundedRectangle(cornerRadius: 20))
+    NavigationLink { RecipesView() } label: { Label("Find your next recipe", systemImage: "arrow.right") }.buttonStyle(PrimaryButton())
+
+    Eyebrow(text: site.film.eyebrow); Heading(text: site.film.title)
+    Text(site.film.text).foregroundStyle(muted)
+    FilmPlayer(src: site.film.src)
+
+    Eyebrow(text: site.cast.eyebrow); Heading(text: "Four cats. Endless kitchen trouble.")
+    ForEach(site.characters) { c in
+     HStack(alignment: .top, spacing: 12) { Image(systemName: "pawprint.fill").foregroundStyle(copper); VStack(alignment: .leading, spacing: 2) { Text(c.name).font(.headline); Text(c.role).font(.subheadline).foregroundStyle(muted) } }
+    }
+
+    Eyebrow(text: "A new story is simmering"); Heading(text: site.season.title)
+    Text(site.season.teaser).foregroundStyle(muted)
+
+    Heading(text: "Something delicious.")
+    ForEach(kitchen.recipes.prefix(3)) { RecipeCard(recipe: $0) }
+    StatusLine()
+   } else { ProgressView().frame(maxWidth: .infinity) }
+  }
+  .refreshable { await kitchen.refresh() }
+  .toolbar { ToolbarItem(placement: .principal) { Wordmark() } }
+  .navigationBarTitleDisplayMode(.inline).recipeDestination()
+ }
 }
+
+struct FilmPlayer: View {
+ let src: String
+ @State private var player: AVPlayer?
+ var body: some View {
+  VideoPlayer(player: player).frame(height: 210).clipShape(RoundedRectangle(cornerRadius: 16))
+   .onAppear { if player == nil, let url = URL(string: apiBase + src) { player = AVPlayer(url: url) } }
+   .onDisappear { player?.pause() }
+ }
+}
+
+struct StatusLine: View {
+ @EnvironmentObject var kitchen: Kitchen
+ var body: some View { Text(kitchen.online ? "Synced with the kitchen" : "Offline · showing saved recipes").font(.system(size: 11)).foregroundStyle(muted) }
+}
+
 struct RecipesView: View {
  @EnvironmentObject var kitchen: Kitchen
  @State private var query = ""
  @State private var category = "All"
- var filtered: [Recipe] { kitchen.recipes.filter { (category == "All" || $0.categories.contains(category)) && (query.isEmpty || ([$0.title] + $0.ingredients).joined(separator: " ").localizedCaseInsensitiveContains(query)) } }
- var body: some View { ScrollView { VStack(alignment: .leading, spacing: 22) {
-  Eyebrow(text: "What are we craving?"); Text("Find your next\nfavourite.").font(.system(size: 42, design: .serif)).tracking(-1)
-  HStack { Image(systemName: "magnifyingglass").foregroundStyle(.secondary); TextField("Search recipes or ingredients", text: $query).font(.system(size: 14)).autocorrectionDisabled() }.padding(15).background(cream).clipShape(RoundedRectangle(cornerRadius: 12))
-  ScrollView(.horizontal, showsIndicators: false) { HStack { ForEach(["All"] + kitchen.recipes.flatMap(\.categories).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }, id: \.self) { c in Button(c) { category = c }.font(.system(size: 12)).padding(.horizontal, 20).frame(minHeight: 44).background(category == c ? copper : cream).foregroundStyle(category == c ? .white : .primary).clipShape(Capsule()) } } }
-  ForEach(filtered) { RecipeCard(recipe: $0) }
-  if filtered.isEmpty { ContentUnavailableView("No recipes found", systemImage: "magnifyingglass", description: Text("Try another ingredient or category.")); Button("Clear filters") { query = ""; category = "All" }.buttonStyle(PrimaryButtonStyle()) }
- }.padding(20) }.background(cream.opacity(0.45)).navigationTitle("Recipes").navigationBarTitleDisplayMode(.inline).refreshable { await kitchen.refresh() } }
+ var categories: [String] { ["All"] + Array(Set(kitchen.recipes.flatMap(\.categories))).sorted() }
+ var filtered: [Recipe] {
+  kitchen.recipes.filter { r in
+   (category == "All" || r.categories.contains(category)) &&
+   (query.isEmpty || ([r.title, r.description] + r.ingredients).joined(separator: " ").localizedCaseInsensitiveContains(query))
+  }
+ }
+ var body: some View {
+  Page {
+   Eyebrow(text: "Recipes"); Heading(text: "Find your next recipe.", size: 36)
+   ScrollView(.horizontal, showsIndicators: false) {
+    HStack { ForEach(categories, id: \.self) { c in
+     Button(c) { category = c }.font(.system(size: 13, weight: .medium)).padding(.horizontal, 16).frame(minHeight: 40)
+      .background(category == c ? copper : surface).foregroundStyle(category == c ? .white : ink).clipShape(Capsule()).overlay(Capsule().stroke(line))
+    } }
+   }
+   if filtered.isEmpty { Text("No recipes match that yet.").foregroundStyle(muted) }
+   ForEach(filtered) { RecipeCard(recipe: $0) }
+  }
+  .searchable(text: $query, prompt: "Search recipes or ingredients")
+  .navigationTitle("Recipes").navigationBarTitleDisplayMode(.inline).recipeDestination()
+ }
 }
+
 struct RecipeDetail: View {
  @EnvironmentObject var kitchen: Kitchen
  let recipe: Recipe
- @State private var checked: Set<Int> = []
- @State private var segment = "Ingredients"
- @State private var cooking = false
- var body: some View { ScrollView { VStack(alignment: .leading, spacing: 20) {
-  FoodImage(file: recipe.image, height: 240).clipShape(RoundedRectangle(cornerRadius: 16))
-  Eyebrow(text: "Free starter recipe · Chef \(recipe.chef)")
-  Text(recipe.title).font(.system(size: 38, design: .serif)).tracking(-1)
-  Label("\(recipe.time) min · \(recipe.difficulty) · Serves \(recipe.servings)", systemImage: "clock").font(.system(size: 12)).foregroundStyle(.secondary)
-  Text(recipe.description).font(.system(size: 15)).lineSpacing(5).foregroundStyle(.secondary)
-  ForEach(kitchen.episodes.filter { $0.recipeId == recipe.id }) { EpisodeView(episode: $0) }
-  Picker("Recipe section", selection: $segment) { Text("Ingredients").tag("Ingredients"); Text("Method").tag("Method") }.pickerStyle(.segmented)
-  if segment == "Ingredients" {
-   HStack { Text("For \(recipe.servings) happy people"); Spacer(); Text("\(checked.count) / \(recipe.ingredients.count) ready") }.font(.system(size: 11)).foregroundStyle(.secondary)
-   ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { i, text in Button { if checked.contains(i) { checked.remove(i) } else { checked.insert(i) }; UserDefaults.standard.set(Array(checked), forKey: "checks-" + recipe.id) } label: { HStack(spacing: 12) { Image(systemName: checked.contains(i) ? "checkmark.square.fill" : "square").foregroundStyle(olive); Text(text).strikethrough(checked.contains(i)).foregroundStyle(checked.contains(i) ? .secondary : .primary); Spacer() }.font(.system(size: 14)).frame(minHeight: 44, alignment: .leading) }.buttonStyle(.plain) }
-   Text("Contains: \(recipe.allergens). Check ingredient labels. Draft recipe for preview.").font(.system(size: 11)).foregroundStyle(.secondary)
-  } else { ForEach(Array(recipe.steps.enumerated()), id: \.offset) { i, step in VStack(alignment: .leading, spacing: 10) { Text("\(i+1). \(step.title)").font(.system(size: 23, design: .serif)); Text(step.text).font(.system(size: 14)).lineSpacing(5).foregroundStyle(.secondary) }.padding(.vertical, 8) } }
-  Button { cooking = true } label: { Label("Start cooking", systemImage: "arrow.right") }.buttonStyle(PrimaryButtonStyle())
- }.padding(20) }.background(cream.opacity(0.35)).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button { kitchen.toggle(recipe.id) } label: { Image(systemName: kitchen.saved.contains(recipe.id) ? "heart.fill" : "heart") }.accessibilityLabel(kitchen.saved.contains(recipe.id) ? "Unsave recipe" : "Save recipe") } }.onAppear { checked = Set(UserDefaults.standard.array(forKey: "checks-" + recipe.id) as? [Int] ?? []) }.fullScreenCover(isPresented: $cooking) { CookingView(recipe: recipe) } }
-}
-struct CookingView: View {
- @Environment(\.dismiss) private var dismiss
- let recipe: Recipe
- @State private var index = 0
- @State private var end: Date?
- @State private var left: Int?
- @State private var finished = false
- @State private var now = Date()
- private let tick = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
- var step: Step { recipe.steps[min(index, recipe.steps.count-1)] }
- var remaining: Int { end.map { max(0, Int(ceil($0.timeIntervalSince(now)))) } ?? left ?? step.seconds ?? 0 }
- func save() { UserDefaults.standard.set(index, forKey: "step-" + recipe.id); UserDefaults.standard.set(end?.timeIntervalSince1970, forKey: "timer-" + recipe.id); UserDefaults.standard.set(left, forKey: "left-" + recipe.id) }
- func move(_ next: Int) { index = next; end = nil; left = nil; save() }
- var body: some View { NavigationStack { ScrollView { VStack(alignment: .leading, spacing: 24) {
-  if finished { VStack(spacing: 24) { Image(systemName: "checkmark.seal.fill").font(.system(size: 62)).foregroundStyle(olive); Eyebrow(text: "You made something good"); Text("Dinner is served.").font(.system(size: 40, design: .serif)); Text("Pull up a chair. You’ve earned the first bite.").foregroundStyle(.secondary); FoodImage(file: recipe.image, height: 230).clipShape(RoundedRectangle(cornerRadius: 16)); Button("Back to the recipe") { dismiss() }.buttonStyle(PrimaryButtonStyle()) }.padding(.top, 30) }
-  else {
-   VStack(spacing: 10) { Text(recipe.title).font(.system(size: 13)).foregroundStyle(.secondary); Text("Step \(index+1) of \(recipe.steps.count)").font(.system(size: 32, design: .serif)) }.frame(maxWidth: .infinity)
-   HStack(spacing: 5) { ForEach(0..<recipe.steps.count, id: \.self) { i in Capsule().fill(i <= index ? copper : Color.brown.opacity(0.15)).frame(height: 4) } }
-   FoodImage(file: recipe.image, height: 210).clipShape(RoundedRectangle(cornerRadius: 16))
-   Text(step.title).font(.system(size: 34, design: .serif)).tracking(-0.7)
-   Text(step.text).font(.system(size: 17)).lineSpacing(7).foregroundStyle(.secondary)
-   if step.seconds != nil { HStack(spacing: 20) {
-    Button { if end != nil { left = remaining; end = nil } else { end = Date().addingTimeInterval(Double(remaining)) }; save() } label: { Image(systemName: end == nil ? "play.fill" : "pause.fill").frame(width: 54, height: 54).overlay(Circle().stroke(olive, lineWidth: 3)) }.accessibilityLabel(end == nil ? "Start timer" : "Pause timer")
-    VStack(alignment: .leading) { Text(remaining == 0 ? "TIME TO CHECK YOUR FOOD" : "KITCHEN TIMER").font(.system(size: 8)).tracking(1); Text(String(format: "%02d:%02d", remaining / 60, remaining % 60)).font(.system(size: 32)).monospacedDigit() }; Spacer(); Button { end = nil; left = step.seconds; save() } label: { Image(systemName: "arrow.counterclockwise").frame(width: 44, height: 44) }.accessibilityLabel("Reset timer")
-   }.padding(19).background(cream).clipShape(RoundedRectangle(cornerRadius: 15)) }
-   HStack { Button { move(max(0,index-1)) } label: { Label("Previous", systemImage: "arrow.left").font(.system(size: 13)).frame(minWidth: 105, minHeight: 50) }.disabled(index == 0); Button { if index == recipe.steps.count-1 { finished = true; move(0) } else { move(index+1) } } label: { Text(index == recipe.steps.count-1 ? "Finish cooking" : "Next step →") }.buttonStyle(PrimaryButtonStyle()) }
-   Text("Your place is saved on this device.").font(.system(size: 11)).foregroundStyle(.secondary)
+ @State private var done: Set<Int> = []
+ var body: some View {
+  Page {
+   MediaImage(path: recipe.image, height: 260).clipShape(RoundedRectangle(cornerRadius: 20))
+   Text(recipe.categories.joined(separator: " · ").uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1.4).foregroundStyle(copper)
+   Heading(text: recipe.title, size: 34)
+   Text(recipe.description).foregroundStyle(muted)
+   HStack(spacing: 18) { Label("\(recipe.totalMinutes) min", systemImage: "clock"); Label(recipe.difficulty, systemImage: "chart.bar"); Label("Serves \(recipe.servings)", systemImage: "person.2") }.font(.system(size: 13)).foregroundStyle(muted)
+   Button { kitchen.toggle(recipe.id) } label: { Label(kitchen.saved.contains(recipe.id) ? "Saved to my kitchen" : "Save to my kitchen", systemImage: kitchen.saved.contains(recipe.id) ? "heart.fill" : "heart") }.buttonStyle(PrimaryButton())
+   Heading(text: "Ingredients", size: 24)
+   VStack(alignment: .leading, spacing: 8) { ForEach(recipe.ingredients, id: \.self) { i in HStack(alignment: .top) { Text("•").foregroundStyle(copper); Text(i) } } }
+   Text("Allergens: " + recipe.allergens).font(.system(size: 13)).foregroundStyle(muted)
+   Heading(text: "Shopping list", size: 24)
+   ShoppingList(recipe: recipe)
+   Heading(text: "Method", size: 24)
+   ForEach(Array(recipe.steps.enumerated()), id: \.offset) { n, step in
+    Button { if done.contains(n) { done.remove(n) } else { done.insert(n) } } label: {
+     HStack(alignment: .top, spacing: 12) {
+      Image(systemName: done.contains(n) ? "checkmark.circle.fill" : "\(n + 1).circle").font(.title3).foregroundStyle(copper)
+      Text(step).foregroundStyle(done.contains(n) ? muted : ink).strikethrough(done.contains(n)).multilineTextAlignment(.leading)
+     }
+    }.buttonStyle(.plain)
+   }
+   if let notes = kitchen.catalog?.site.notes {
+    Text(notes.allergy).font(.system(size: 12)).foregroundStyle(muted)
+    Text(notes.cats).font(.system(size: 12)).foregroundStyle(muted)
+   }
   }
- }.padding(24) }.background(cream.opacity(0.35)).navigationTitle("Cooking mode").navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarLeading) { Button { save(); dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Exit cooking mode") } }.onReceive(tick) { now = $0 }.onAppear { index = min(UserDefaults.standard.integer(forKey: "step-" + recipe.id), recipe.steps.count-1); let timestamp = UserDefaults.standard.double(forKey: "timer-" + recipe.id); if timestamp > 0 { end = Date(timeIntervalSince1970: timestamp) }; left = UserDefaults.standard.object(forKey: "left-" + recipe.id) as? Int } } }
+  .navigationBarTitleDisplayMode(.inline)
+ }
 }
-struct CookbookView: View {
+
+struct CharactersView: View {
  @EnvironmentObject var kitchen: Kitchen
- @State private var segment = "Saved"
- var body: some View { ScrollView { VStack(alignment: .leading, spacing: 24) { Eyebrow(text: "Your very own collection"); Text("My cookbook.").font(.system(size: 43, design: .serif)).tracking(-1); Text("The good ones, all in one place.").foregroundStyle(.secondary); Picker("Collection", selection: $segment) { Text("Saved").tag("Saved"); Text("Purchased").tag("Purchased") }.pickerStyle(.segmented)
-  if segment == "Saved" { if kitchen.saved.isEmpty { ContentUnavailableView("Your favourites start here", systemImage: "heart", description: Text("Tap the heart on a recipe to keep it close.")) }; ForEach(kitchen.recipes.filter { kitchen.saved.contains($0.id) }) { RecipeCard(recipe: $0) } }
-  else { ContentUnavailableView("A little room for more", systemImage: "bag", description: Text("Purchased recipes will appear once accounts and payments are connected.")) }
- }.padding(20) }.background(cream.opacity(0.4)).navigationTitle("Cookbook").navigationBarTitleDisplayMode(.inline) }
+ var body: some View {
+  Page {
+   if let site = kitchen.catalog?.site {
+    Eyebrow(text: site.cast.eyebrow); Heading(text: site.cast.title, size: 36)
+    Text(site.cast.text).foregroundStyle(muted)
+    MediaImage(path: site.cast.image, height: 240).clipShape(RoundedRectangle(cornerRadius: 20))
+    ForEach(site.characters) { c in
+     VStack(alignment: .leading, spacing: 8) {
+      Heading(text: c.name, size: 26); Eyebrow(text: c.role)
+      Text(c.bio)
+      Text("“\(c.quote)”").font(.system(size: 17, design: .serif)).italic().foregroundStyle(copper)
+      Text(c.traits.joined(separator: " · ")).font(.system(size: 12, weight: .semibold)).foregroundStyle(olive)
+      Text(c.relationship).font(.system(size: 14)).foregroundStyle(muted)
+     }.padding(18).frame(maxWidth: .infinity, alignment: .leading).background(surface).clipShape(RoundedRectangle(cornerRadius: 20)).overlay(RoundedRectangle(cornerRadius: 20).stroke(line))
+    }
+    Heading(text: "Collections", size: 26)
+    ForEach(site.collections) { col in
+     VStack(alignment: .leading, spacing: 6) {
+      Text(col.name).font(.headline); Text(col.text).font(.subheadline).foregroundStyle(muted)
+      ForEach(col.recipes.compactMap { kitchen.recipe($0) }) { r in NavigationLink(value: r) { Label(r.title, systemImage: "arrow.right").font(.subheadline) } }
+     }.padding(.vertical, 6)
+    }
+   }
+  }
+  .navigationTitle("Characters").navigationBarTitleDisplayMode(.inline).recipeDestination()
+ }
 }
-struct ChefsView: View {
+
+struct StoryView: View {
  @EnvironmentObject var kitchen: Kitchen
- var body: some View { ScrollView { VStack(alignment: .leading, spacing: 24) { Eyebrow(text: "A recipe for good company"); Text("Two cats.\nOne kitchen.").font(.system(size: 43, design: .serif)).tracking(-1); FoodImage(file: "chefs.png", height: 280).clipShape(RoundedRectangle(cornerRadius: 18)); character("Whisker", "The perfectionist", "Precise. Particular. Secretly a softie. Keeper of the recipes and the good parmesan."); Divider(); character("Flame", "The lovable troublemaker", "A pinch of curiosity, a handful of mischief. Measures absolutely everything with his heart."); Text("Fictional AI cat chefs. Real cooking inspiration.").font(.system(size: 11)).foregroundStyle(.secondary) }.padding(20) }.background(cream.opacity(0.4)).navigationTitle("Meet the chefs").navigationBarTitleDisplayMode(.inline) }
- func character(_ name: String, _ subtitle: String, _ copy: String) -> some View { VStack(alignment: .leading, spacing: 13) { Eyebrow(text: subtitle); Text("Chef \(name)").font(.system(size: 32, design: .serif)); Text(copy).font(.system(size: 15)).foregroundStyle(.secondary).lineSpacing(5); if let recipe = kitchen.recipes.first(where: { $0.chef == name }) { NavigationLink { RecipeDetail(recipe: recipe) } label: { Label("Cook with \(name)", systemImage: "arrow.right").font(.system(size: 13, weight: .semibold)).padding(.vertical, 10) } } } }
+ var body: some View {
+  Page {
+   if let site = kitchen.catalog?.site {
+    Eyebrow(text: site.season.eyebrow); Heading(text: site.season.title, size: 36)
+    Text(site.season.text).foregroundStyle(muted)
+    ForEach(site.episodes) { ep in
+     VStack(alignment: .leading, spacing: 8) {
+      Eyebrow(text: "Episode \(ep.n) · \(ep.status)")
+      Heading(text: ep.title, size: 22)
+      Text(ep.text).font(.system(size: 15))
+      if let r = kitchen.recipe(ep.recipe) { NavigationLink(value: r) { Label("Cook \(r.title)", systemImage: "fork.knife") } }
+     }.padding(18).frame(maxWidth: .infinity, alignment: .leading).background(surface).clipShape(RoundedRectangle(cornerRadius: 20)).overlay(RoundedRectangle(cornerRadius: 20).stroke(line))
+    }
+   }
+  }
+  .navigationTitle("The story").navigationBarTitleDisplayMode(.inline).recipeDestination()
+ }
 }
-struct EpisodeView: View {
- let episode: Episode
- @State private var player: AVPlayer?
- var body: some View { VideoPlayer(player: player).frame(height: 240).clipShape(RoundedRectangle(cornerRadius: 14)).onAppear { if player == nil, let url = URL(string: episode.videoUrl) { player = AVPlayer(url: url) } }.onDisappear { player?.pause() } }
+
+struct KitchenView: View {
+ @EnvironmentObject var kitchen: Kitchen
+ var saved: [Recipe] { kitchen.recipes.filter { kitchen.saved.contains($0.id) } }
+ var body: some View {
+  Page {
+   Eyebrow(text: "My kitchen"); Heading(text: "Your saved recipes.", size: 36)
+   if saved.isEmpty {
+    Text("Tap the heart on any recipe to keep it here.").foregroundStyle(muted)
+    NavigationLink { RecipesView() } label: { Label("Browse recipes", systemImage: "arrow.right") }.buttonStyle(PrimaryButton())
+   }
+   ForEach(saved) { RecipeCard(recipe: $0) }
+   StatusLine()
+  }
+  .navigationTitle("My kitchen").navigationBarTitleDisplayMode(.inline).recipeDestination()
+ }
+}
+
+// MARK: - Shopping list
+
+// One recipe's shopping list: scale it to how many you're feeding, tick off what's in the basket, share what's left.
+struct ShoppingList: View {
+ let recipe: Recipe
+ @State private var people = 0
+ @State private var bought: Set<Int> = []
+ private var serves: Int { people == 0 ? recipe.servings : people }
+ private var items: [String] { recipe.ingredients.map { scaled($0, by: Double(serves) / Double(max(recipe.servings, 1))) } }
+ var body: some View {
+  VStack(alignment: .leading, spacing: 12) {
+   Stepper("Shopping for \(serves) \(serves == 1 ? "person" : "people")", value: Binding(get: { serves }, set: { people = $0 }), in: 1...20).font(.system(size: 15, weight: .semibold))
+   HStack { Text("\(bought.count) of \(items.count) in the basket"); Spacer(); if !bought.isEmpty { Button("Clear") { bought = []; save() } } }.font(.system(size: 12)).foregroundStyle(muted)
+   ForEach(Array(items.enumerated()), id: \.offset) { i, text in
+    Button { if bought.contains(i) { bought.remove(i) } else { bought.insert(i) }; save() } label: {
+     HStack(spacing: 12) { Image(systemName: bought.contains(i) ? "cart.fill" : "cart").foregroundStyle(copper); Text(text).foregroundStyle(bought.contains(i) ? muted : ink).strikethrough(bought.contains(i)).multilineTextAlignment(.leading); Spacer() }.padding(.vertical, 4)
+    }.buttonStyle(.plain)
+   }
+   ShareLink(item: "\(recipe.title) · shopping for \(serves)\n" + items.enumerated().filter { !bought.contains($0.offset) }.map { "• " + $0.element }.joined(separator: "\n")) {
+    Label("Share shopping list", systemImage: "square.and.arrow.up")
+   }.buttonStyle(PrimaryButton())
+  }
+  .onAppear { bought = Set(UserDefaults.standard.array(forKey: "bought-" + recipe.id) as? [Int] ?? []) }
+ }
+ private func save() { UserDefaults.standard.set(Array(bought), forKey: "bought-" + recipe.id) }
+ // Scales a leading amount ("180 g pasta", "1/4 tsp salt", "2 garlic cloves"); lines without one ("Black pepper to taste") stay as written.
+ private func scaled(_ line: String, by factor: Double) -> String {
+  guard factor != 1, let m = line.firstMatch(of: /^(\d+(?:\.\d+)?)(?:\/(\d+))?(?=\s|$)/) else { return line }
+  var amount = Double(String(m.1))!
+  if let d = m.2 { amount /= Double(String(d))! }
+  let v = amount * factor
+  // Under 10, round to the nearest quarter and write it the way a recipe would: 1/4, 1/2, 1 1/2.
+  let quarters = Int((v * 4).rounded()), whole = quarters / 4, part = ["", "1/4", "1/2", "3/4"][quarters % 4]
+  let shown = v >= 10 ? String(Int(v.rounded())) : quarters == 0 ? "a pinch of" : whole == 0 ? part : part.isEmpty ? String(whole) : "\(whole) \(part)"
+  return shown + line[m.range.upperBound...]
+ }
 }
