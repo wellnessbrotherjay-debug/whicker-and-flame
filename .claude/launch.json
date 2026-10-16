@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {"name": "whisker-heat", "runtimeExecutable": "node", "runtimeArgs": ["server/index.mjs", "--production"], "port": 4317}
+  ]
+}

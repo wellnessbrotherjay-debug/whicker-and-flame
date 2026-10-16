@@ -1,0 +1,284 @@
+[
+ {
+  "id": "creamy-tomato-dreams",
+  "title": "Creamy Tomato Dreams",
+  "description": "",
+  "servings": 2,
+  "minutes": 25,
+  "image": "/assets/tomato-pasta.png",
+  "ingredients": [
+   "180 g dried pasta",
+   "15 ml olive oil",
+   "2 garlic cloves, finely chopped",
+   "400 g canned chopped tomatoes",
+   "60 ml double cream",
+   "25 g grated Parmesan",
+   "10 g basil leaves",
+   "1/4 tsp fine salt, plus salt for pasta water",
+   "Black pepper to taste"
+  ],
+  "steps": [
+   "Bring a large pot of water to a boil. Salt it and cook the pasta for the time on its packet. Reserve 150 ml cooking water, then drain.",
+   "Meanwhile, heat the oil in a deep frying pan over medium-low heat. Stir in the garlic and cook for 1 minute without browning.",
+   "Add tomatoes and 1/4 tsp salt. Simmer uncovered for 10 minutes, stirring occasionally, until slightly thickened.",
+   "Lower the heat and stir in the cream. Add pasta and 30 ml reserved water; toss for 1 minute, adding more water a tablespoon at a time if needed.",
+   "Remove from heat. Stir in Parmesan and torn basil, season with pepper and serve immediately."
+  ],
+  "allergens": "wheat, milk. Check ingredient labels."
+ },
+ {
+  "id": "garden-pesto-twirls",
+  "title": "Garden Pesto Twirls",
+  "description": "",
+  "servings": 2,
+  "minutes": 20,
+  "image": "/assets/pesto.jpg",
+  "ingredients": [
+   "180 g fusilli",
+   "30 g basil leaves",
+   "25 g pine nuts",
+   "25 g grated Parmesan",
+   "1 small garlic clove",
+   "45 ml olive oil",
+   "15 ml lemon juice",
+   "1/4 tsp fine salt, plus salt for pasta water",
+   "Black pepper to taste"
+  ],
+  "steps": [
+   "Cook fusilli in boiling salted water following the packet instructions. Reserve 150 ml cooking water before draining.",
+   "Toast pine nuts in a dry frying pan over medium-low heat for 2–3 minutes, shaking frequently, until lightly golden. Transfer to a plate to cool.",
+   "Pulse basil, pine nuts, Parmesan, peeled garlic, oil, lemon juice and 1/4 tsp salt in a food processor until a coarse paste forms.",
+   "Off the heat, toss pasta with pesto and 30 ml cooking water. Add more water as needed for a glossy coating. Taste for pepper and serve."
+  ],
+  "allergens": "wheat, milk, pine nuts. Check ingredient labels."
+ },
+ {
+  "id": "slow-sunday-pancakes",
+  "title": "Slow Sunday Pancakes",
+  "description": "",
+  "servings": 2,
+  "minutes": 25,
+  "image": "/assets/pancakes.jpg",
+  "ingredients": [
+   "120 g plain flour",
+   "1 tsp baking powder",
+   "15 g caster sugar",
+   "Pinch of salt",
+   "1 large egg",
+   "150 ml milk",
+   "15 g melted butter, cooled slightly",
+   "10 g butter for cooking",
+   "100 g washed berries",
+   "30 ml maple syrup"
+  ],
+  "steps": [
+   "Mix flour, baking powder, sugar and salt in a bowl. Whisk egg, milk and melted butter separately.",
+   "Pour wet ingredients into dry and stir just until no dry flour remains. Small lumps are fine. Rest for 5 minutes.",
+   "Heat a non-stick frying pan over medium-low heat and brush with some cooking butter. Spoon in 3 portions of batter, about 60 ml each, leaving space between them.",
+   "Cook for 2–3 minutes until bubbles appear and edges begin to set. Flip and cook for another 1–2 minutes, until golden with no wet batter in the centre. Reduce heat if browning too quickly; repeat with remaining batter.",
+   "Serve with berries and maple syrup."
+  ],
+  "allergens": "wheat, milk, egg. Check ingredient labels."
+ },
+ {
+  "id": "lemon-pea-risotto",
+  "title": "Lemon & Pea Risotto",
+  "description": "",
+  "servings": 2,
+  "minutes": 35,
+  "image": null,
+  "ingredients": [
+   "160 g arborio rice",
+   "700 ml hot vegetable stock, plus a little hot water if needed",
+   "15 ml olive oil",
+   "1 small onion, finely chopped",
+   "120 g frozen peas",
+   "25 g butter",
+   "30 g grated Parmesan",
+   "1 tsp finely grated lemon zest",
+   "15 ml lemon juice",
+   "Black pepper to taste"
+  ],
+  "steps": [
+   "Keep stock warm in a saucepan over low heat. In a separate wide pan, heat oil and soften onion over medium-low heat for 6 minutes, stirring without browning.",
+   "Add rice and stir for 1 minute. Add 100 ml stock and stir until mostly absorbed.",
+   "Add further stock about 100 ml at a time, stirring frequently and letting each addition mostly absorb. Maintain a gentle simmer for about 18–22 minutes total, until rice is tender with a slight bite; use hot water if stock runs out.",
+   "Stir peas into the rice for the last 4 minutes of cooking. The finished risotto should spread gently when spooned onto a plate, so add a splash of liquid if stiff.",
+   "Take off heat. Stir in butter, Parmesan, lemon zest and juice. Rest for 2 minutes, taste for seasoning and serve."
+  ],
+  "allergens": "milk, check stock label. Check ingredient labels."
+ },
+ {
+  "id": "roasted-tomato-soup",
+  "title": "Roasted Tomato & White Bean Soup",
+  "description": "",
+  "servings": 4,
+  "minutes": 50,
+  "image": null,
+  "ingredients": [
+   "800 g ripe tomatoes, quartered",
+   "1 onion, cut into wedges",
+   "3 garlic cloves, peeled",
+   "30 ml olive oil",
+   "1/2 tsp fine salt",
+   "1/4 tsp black pepper",
+   "400 g can cannellini beans, drained and rinsed",
+   "500 ml vegetable stock",
+   "10 g basil leaves"
+  ],
+  "steps": [
+   "Heat oven to 200°C conventional or 180°C fan. Put tomatoes, onion and garlic on a rimmed roasting tray; toss with oil, salt and pepper.",
+   "Roast for 30–35 minutes, until tomatoes collapse and onion is tender, stirring once halfway through.",
+   "Scrape vegetables and all tray juices into a saucepan. Add beans and stock; bring to a boil, then simmer for 10 minutes.",
+   "Add basil and blend with a stick blender, keeping its head submerged to avoid splashes. Add a little water if too thick. Taste and serve hot."
+  ],
+  "allergens": "check stock label. Check ingredient labels."
+ },
+ {
+  "id": "mushroom-bruschetta",
+  "title": "Garlic Mushroom Bruschetta",
+  "description": "",
+  "servings": 2,
+  "minutes": 20,
+  "image": null,
+  "ingredients": [
+   "250 g mushrooms, sliced",
+   "4 slices sourdough bread, about 160 g",
+   "15 ml olive oil",
+   "15 g butter",
+   "2 garlic cloves, finely chopped",
+   "1 tsp thyme leaves",
+   "10 g parsley, chopped",
+   "10 ml lemon juice",
+   "1/4 tsp fine salt",
+   "Black pepper to taste"
+  ],
+  "steps": [
+   "Toast bread until crisp and golden. Keep warm while cooking the mushrooms.",
+   "Heat oil in a large frying pan over medium-high heat. Add mushrooms in a single layer and cook for 4 minutes before stirring.",
+   "Stir and cook for 3–4 minutes more, until released moisture has evaporated and mushrooms are browned.",
+   "Reduce heat to medium-low. Add butter, garlic, thyme and salt; stir for 1 minute until fragrant. Add parsley, lemon juice and pepper.",
+   "Spoon mushrooms and pan juices over toast and serve straight away."
+  ],
+  "allergens": "wheat, milk. Check ingredient labels."
+ },
+ {
+  "id": "crispy-chickpea-bowls",
+  "title": "Crispy Chickpea & Couscous Bowls",
+  "description": "",
+  "servings": 2,
+  "minutes": 35,
+  "image": null,
+  "ingredients": [
+   "400 g can chickpeas, drained, rinsed and dried well",
+   "15 ml olive oil",
+   "1 tsp smoked paprika",
+   "1/2 tsp ground cumin",
+   "1/4 tsp fine salt",
+   "120 g instant couscous",
+   "150 ml boiling water, or quantity specified on packet",
+   "150 g cucumber, diced",
+   "150 g cherry tomatoes, halved",
+   "100 g plain yogurt",
+   "15 ml lemon juice",
+   "10 g parsley, chopped"
+  ],
+  "steps": [
+   "Heat oven to 220°C conventional or 200°C fan. Toss dry chickpeas with oil, paprika, cumin and salt on a roasting tray.",
+   "Roast for 25–30 minutes, shaking halfway, until golden and crisp outside.",
+   "Place couscous in a heatproof bowl. Add boiling water as directed on its packet, cover and stand for 5 minutes or the packet time. Fluff with a fork.",
+   "Mix yogurt with lemon juice. Divide couscous, cucumber and tomatoes between bowls.",
+   "Top with hot chickpeas, yogurt dressing and parsley. Serve immediately for the best crunch."
+  ],
+  "allergens": "wheat, milk. Check ingredient labels."
+ },
+ {
+  "id": "spinach-ricotta-bake",
+  "title": "Spinach & Ricotta Pasta Bake",
+  "description": "",
+  "servings": 4,
+  "minutes": 50,
+  "image": null,
+  "ingredients": [
+   "250 g penne",
+   "15 ml olive oil",
+   "2 garlic cloves, finely chopped",
+   "500 g tomato passata",
+   "1 tsp dried oregano",
+   "1/2 tsp fine salt, plus salt for pasta water",
+   "200 g fresh spinach",
+   "250 g ricotta",
+   "100 g grated mozzarella",
+   "25 g grated Parmesan",
+   "Black pepper to taste"
+  ],
+  "steps": [
+   "Heat oven to 200°C conventional or 180°C fan. Cook pasta in boiling salted water for 2 minutes less than the packet time; drain.",
+   "Heat oil in a large saucepan over medium-low heat. Cook garlic for 1 minute, then add passata, oregano, salt and pepper. Simmer for 8 minutes.",
+   "Add spinach in handfuls and stir for 2–3 minutes until wilted. Fold in pasta and ricotta.",
+   "Transfer to an approximately 2-litre baking dish. Sprinkle with mozzarella and Parmesan.",
+   "Bake for 20–25 minutes, until bubbling throughout and golden on top. Stand for 5 minutes before serving."
+  ],
+  "allergens": "wheat, milk. Check ingredient labels."
+ },
+ {
+  "id": "sweet-potato-black-bean-chili",
+  "title": "Sweet Potato & Black Bean Chili",
+  "description": "",
+  "servings": 4,
+  "minutes": 45,
+  "image": null,
+  "ingredients": [
+   "15 ml olive oil",
+   "1 onion, diced",
+   "2 garlic cloves, finely chopped",
+   "1 red pepper, diced",
+   "400 g peeled sweet potato, cut into 1.5 cm cubes",
+   "2 tsp ground cumin",
+   "1 tsp smoked paprika",
+   "1/4 tsp chili flakes, optional",
+   "400 g canned chopped tomatoes",
+   "400 g can black beans, drained and rinsed",
+   "300 ml vegetable stock",
+   "15 ml lime juice",
+   "10 g coriander leaves",
+   "Salt and pepper to taste"
+  ],
+  "steps": [
+   "Heat oil in a large saucepan over medium heat. Cook onion and pepper for 6 minutes, stirring occasionally.",
+   "Add garlic, cumin, paprika and optional chili flakes. Stir for 1 minute.",
+   "Add sweet potato, tomatoes and stock. Bring to a boil, cover and simmer gently for 20 minutes, stirring occasionally.",
+   "Add drained beans. Simmer uncovered for 10 minutes, until sweet potato is easily pierced with a fork and sauce has thickened. Add a splash of water if it catches before the potato is tender.",
+   "Stir in lime juice, taste for salt and pepper, and scatter over coriander. Serve in bowls."
+  ],
+  "allergens": "check stock and spice labels. Check ingredient labels."
+ },
+ {
+  "id": "apple-oat-crumble",
+  "title": "Warm Apple & Oat Crumble",
+  "description": "",
+  "servings": 4,
+  "minutes": 55,
+  "image": null,
+  "ingredients": [
+   "600 g apples, peeled, cored and cut into 1 cm pieces",
+   "15 ml lemon juice",
+   "30 g light brown sugar for the fruit",
+   "1 tsp ground cinnamon",
+   "30 ml water",
+   "80 g plain flour",
+   "60 g rolled oats",
+   "60 g cold butter, diced",
+   "40 g light brown sugar for topping",
+   "Pinch of salt"
+  ],
+  "steps": [
+   "Heat oven to 190°C conventional or 170°C fan. Toss apples with lemon juice, 30 g sugar, cinnamon and water in an approximately 1.5-litre baking dish.",
+   "Rub cold butter into flour with your fingertips until coarse crumbs form. Stir in oats, 40 g sugar and salt.",
+   "Scatter topping evenly over apples without pressing it down.",
+   "Bake for 35–40 minutes, until topping is golden, fruit juices bubble at the edges and apple pieces feel tender when pierced. If topping browns before fruit softens, cover loosely with foil.",
+   "Let stand for 10 minutes before serving; the fruit will be very hot."
+  ],
+  "allergens": "wheat, oats, milk. Check ingredient labels."
+ }
+]
