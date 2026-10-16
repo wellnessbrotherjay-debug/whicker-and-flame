@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {openDatabase} from '../server/db.mjs';
 import {createStudio} from '../server/studio.mjs';
-import {recipes, site} from '../server/catalog.mjs';
+import {site} from '../server/catalog.mjs';
+import recipes from './fixtures/recipes.json' with {type: 'json'};
 import {planWeek, canMove} from '../shared/content.mjs';
 import brand from '../content/brandkit.json' with {type: 'json'};
 

@@ -4,7 +4,7 @@ import {openDatabase} from '../server/db.mjs';
 import {createStore} from '../server/store.mjs';
 import {createAuth} from '../server/auth.mjs';
 import {createKitchen} from '../server/kitchen.mjs';
-import {recipes} from '../server/catalog.mjs';
+import recipes from './fixtures/recipes.json' with {type: 'json'};
 
 // Runs against a throwaway database: TEST_DATABASE_URL, e.g. postgres://localhost/whisker_test
 const pool = await openDatabase(process.env.TEST_DATABASE_URL || 'postgres://localhost/whisker_test');

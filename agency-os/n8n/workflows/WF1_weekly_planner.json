@@ -3,7 +3,7 @@
   "name": "Whisker OS WF1 \u2014 Weekly Planner",
   "nodes": [
     {
-      "id": "aa5bd8f4-b37c-4d66-8e25-c98cb7805b47",
+      "id": "978eec2d-4b28-4593-a458-1eed6d69b7a5",
       "name": "Run once",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -14,7 +14,7 @@
       "parameters": {}
     },
     {
-      "id": "f5ee23c8-da15-4538-a827-be5aac182b67",
+      "id": "8046cca0-b84c-4d8b-aa29-4358e5d630a3",
       "name": "Sunday 17:00",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -34,7 +34,7 @@
       }
     },
     {
-      "id": "97024858-00d2-4514-8a31-7586f2e4c6b5",
+      "id": "7a15794e-6b35-47a2-9a84-d8b148a1a7b9",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -47,55 +47,55 @@
         "assignments": {
           "assignments": [
             {
-              "id": "110423d9-13f6-46a0-a5e1-8264c6bc8750",
+              "id": "336454d8-f3f3-4df9-b654-5cbbd731ef0d",
               "name": "tenant",
               "value": "whisker",
               "type": "string"
             },
             {
-              "id": "7b6ef8b2-69e7-4271-be15-bc9008cd1b7c",
+              "id": "a7cd1e96-e479-4a88-abd1-e722a547ddb9",
               "name": "graph_version",
               "value": "v25.0",
               "type": "string"
             },
             {
-              "id": "5d953492-5db0-4bc3-8e6e-d669affb0d4d",
+              "id": "08cc8758-fba7-4268-ba5f-74a20343828d",
               "name": "model_planner",
-              "value": "gpt-4.1",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "6539b0a7-3d64-46fa-acf6-91f227dfbcb6",
+              "id": "832f7161-81b6-4289-95b6-97b51f44e4b3",
               "name": "model_copy",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "2934cd76-9870-4012-8500-25218e8d0cd6",
+              "id": "d7670f4e-9eb0-41a3-abce-67121b280caa",
               "name": "model_qa",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "57496f22-5a72-4651-a904-e02cd7bbb4e7",
+              "id": "9be743ca-9396-4f17-832a-56346d722138",
               "name": "wa_notice_template",
               "value": "agency_os_notice",
               "type": "string"
             },
             {
-              "id": "671ea1b5-e05e-445d-b15a-3959356dba39",
+              "id": "1ca14e49-98ad-44ea-ab2d-229dea5a584d",
               "name": "wa_template_lang",
               "value": "en",
               "type": "string"
             },
             {
-              "id": "e648460f-10b4-441d-b812-7909f58a15b1",
+              "id": "eeb17502-1920-4fbf-bc86-d7ed8d22b919",
               "name": "allowed_formats",
               "value": "carousel,single",
               "type": "string"
             },
             {
-              "id": "31a4b404-3c12-4df6-bb0e-8315aa837ac3",
+              "id": "dafee447-2452-4fac-8e4e-48f1131e60c3",
               "name": "publish_time_local",
               "value": "18:00",
               "type": "string"
@@ -106,7 +106,7 @@
       }
     },
     {
-      "id": "961042fb-78c8-4d5e-9322-011ecbc00bdb",
+      "id": "6904cdf6-4cdb-4c00-a62d-d8bbe31116b9",
       "name": "Load context",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -136,7 +136,7 @@
       }
     },
     {
-      "id": "235b353d-0439-453e-8397-817a3ac0f282",
+      "id": "a029fd41-aefe-4a90-abbb-28fb976db800",
       "name": "Build planner prompt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -149,7 +149,7 @@
       }
     },
     {
-      "id": "d2968333-0103-4df5-8100-20bbcb9175d8",
+      "id": "2eb25df3-8b39-4e37-a1b5-6a416d692ead",
       "name": "Cache lookup",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -179,7 +179,7 @@
       }
     },
     {
-      "id": "3a7f430e-abea-4cf7-8375-ee69ae1c14ab",
+      "id": "954cb596-e6cc-4c0f-a7f7-6b653b725f6e",
       "name": "Cache hit?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -197,7 +197,7 @@
           },
           "conditions": [
             {
-              "id": "3f5dfb9b-b7d0-48b8-8bbb-92e1ce277516",
+              "id": "200cfbc0-482f-4d5f-8e0e-bbc4410370d3",
               "leftValue": "={{ !!$json.response }}",
               "rightValue": "",
               "operator": {
@@ -213,7 +213,7 @@
       }
     },
     {
-      "id": "0d30a7a0-58ac-4b46-82b2-bfc62ff76f09",
+      "id": "4940c485-ba56-48e9-a45b-8fd48f27cb83",
       "name": "OpenAI \u2014 plan week",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -242,7 +242,7 @@
       }
     },
     {
-      "id": "5d7c7fa7-1f6c-453d-bcfe-3d1a144ae047",
+      "id": "11c19c03-32f5-45a4-a897-f726ddcb2bc2",
       "name": "Save to cache",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -272,7 +272,7 @@
       }
     },
     {
-      "id": "5b0981fc-3c95-427c-b76b-672c3013d1a8",
+      "id": "cdbb10b6-bc66-4d3e-a615-e8ba0635645e",
       "name": "Parse + validate plan",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -285,7 +285,7 @@
       }
     },
     {
-      "id": "bdc84f67-e7ce-4579-8dae-c7b3519f4f70",
+      "id": "ff54bc0d-50b0-45b8-adac-164d1cd6633b",
       "name": "Save strategy memo",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -315,7 +315,7 @@
       }
     },
     {
-      "id": "2293f9ea-f5f0-40ff-8d92-1f833db19f89",
+      "id": "4a962a43-1602-4573-92ad-3ae4b3e9a24f",
       "name": "Build caption request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -328,7 +328,7 @@
       }
     },
     {
-      "id": "5997b15a-df2c-47fc-bf13-28d75bdb97e8",
+      "id": "548e3683-cb44-4cf4-9a60-1517d68fdc4c",
       "name": "OpenAI \u2014 captions",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -357,7 +357,7 @@
       }
     },
     {
-      "id": "872e41de-2a93-4d80-947b-54a530cde48e",
+      "id": "7e76498a-5a83-4890-851d-864ade40dd4e",
       "name": "Build QA request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -370,7 +370,7 @@
       }
     },
     {
-      "id": "48665e2c-4ddd-4a52-a174-a09a623dff74",
+      "id": "cd7b0abb-9cbd-4e4f-b6c6-85cd5e2b0518",
       "name": "OpenAI \u2014 QA",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -399,7 +399,7 @@
       }
     },
     {
-      "id": "60821022-b6ea-4ce0-9fbf-72b1d240a4bd",
+      "id": "8dc3be97-ea22-4757-b8fa-9342775032b6",
       "name": "Assemble + schedule",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -412,7 +412,7 @@
       }
     },
     {
-      "id": "a2a536d6-a431-40fc-a1a5-f34617d180f8",
+      "id": "3ea924ae-b664-4ca4-8418-161e059a5b9b",
       "name": "Insert post + features + render job",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -442,7 +442,7 @@
       }
     },
     {
-      "id": "ab3fcd01-54b5-4773-a0a7-65b5fbf716e2",
+      "id": "3a176f26-ee40-4a34-bfbc-11dbb2054447",
       "name": "Summarise",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -455,7 +455,7 @@
       }
     },
     {
-      "id": "9cbe341b-2154-4054-832d-f3da150cab7b",
+      "id": "457fd2f8-88af-4539-a6fe-a49233f12965",
       "name": "Log run",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,

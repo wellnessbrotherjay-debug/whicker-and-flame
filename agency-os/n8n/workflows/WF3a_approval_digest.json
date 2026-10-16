@@ -3,7 +3,7 @@
   "name": "Whisker OS WF3a \u2014 Approval Digest",
   "nodes": [
     {
-      "id": "e92158c3-9162-4513-9635-6099fe76183b",
+      "id": "ccda7f39-e195-47e8-a6db-8dff9eecaa18",
       "name": "Run once",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -14,7 +14,7 @@
       "parameters": {}
     },
     {
-      "id": "723b0515-ae44-4865-901e-87a79be19679",
+      "id": "330bd9ba-4de2-41b4-9419-11ae05c06aec",
       "name": "Sunday 19:00 digest",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -34,7 +34,7 @@
       }
     },
     {
-      "id": "94de4ed8-5059-4e39-a986-c36b20486b4e",
+      "id": "b7b26a38-7784-44d4-9489-c285646fc846",
       "name": "Daily 09:00 reminder",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -54,7 +54,7 @@
       }
     },
     {
-      "id": "b1c69013-59a8-43e1-8638-79623dd1d3d4",
+      "id": "640c4cb9-cde0-48c8-bc74-e3ac4e9c5244",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -67,55 +67,55 @@
         "assignments": {
           "assignments": [
             {
-              "id": "f3012929-7f4c-4d48-bf6b-9e28b69e5766",
+              "id": "33391fb0-c6ea-4558-b9d0-fad9f69f3a36",
               "name": "tenant",
               "value": "whisker",
               "type": "string"
             },
             {
-              "id": "917c1f0d-6ade-4302-a69e-0949c80096d7",
+              "id": "4a366002-8520-4eb6-9938-d35195f11858",
               "name": "graph_version",
               "value": "v25.0",
               "type": "string"
             },
             {
-              "id": "b41f6814-6b11-4f13-be75-8ca9a9dd1e2f",
+              "id": "8773cb1b-f283-4315-ad45-dc1cb602959b",
               "name": "model_planner",
-              "value": "gpt-4.1",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "00cc3c64-9fa6-4fd6-93a7-348bc533b2d5",
+              "id": "5d29ae92-83c9-4033-a7dc-2b014565bb4d",
               "name": "model_copy",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "7b4da561-ad6b-475d-b23c-d1873a4172bb",
+              "id": "34acd5c2-be24-4bc7-b4a1-3f84262410a1",
               "name": "model_qa",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "2dfb6352-666b-428a-afaa-6d6679452194",
+              "id": "2e4db8de-6829-47d8-8689-91e5a360ef40",
               "name": "wa_notice_template",
               "value": "agency_os_notice",
               "type": "string"
             },
             {
-              "id": "5ea008e5-6f4a-49dd-aaf0-396fc3b410b1",
+              "id": "18ce5664-beb6-40e8-b268-30520e74b40d",
               "name": "wa_template_lang",
               "value": "en",
               "type": "string"
             },
             {
-              "id": "bf64af9e-f2f3-400c-9375-ac2438578250",
+              "id": "51d85a33-f5c7-4eff-a73e-dd240af1ce41",
               "name": "allowed_formats",
               "value": "carousel,single",
               "type": "string"
             },
             {
-              "id": "55641233-39d5-4791-8c02-adc664087e66",
+              "id": "93956ff6-20a8-4bbc-bfba-efa665f9020b",
               "name": "publish_time_local",
               "value": "18:00",
               "type": "string"
@@ -126,7 +126,7 @@
       }
     },
     {
-      "id": "15287b01-fa3c-422f-8316-6351c5fa5bd6",
+      "id": "87837fc6-20a8-4cf9-8971-df477073d137",
       "name": "Assign approval codes",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -156,7 +156,7 @@
       }
     },
     {
-      "id": "193b712c-e782-4959-80b2-826ad2adeae1",
+      "id": "2a2c6938-9558-425b-941e-d79c841568b5",
       "name": "Build digest",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -169,7 +169,7 @@
       }
     },
     {
-      "id": "b6800c40-baeb-4dcd-aa59-c96ec4cb1cad",
+      "id": "6aeedf7f-f274-45db-bfb2-cd49146c283d",
       "name": "Send digest",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -199,7 +199,7 @@
       }
     },
     {
-      "id": "f5fc44e0-3ec1-43ef-affb-05a1007104c6",
+      "id": "41e335f9-1db7-4d42-864c-24d5ba8770b4",
       "name": "Log run",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,

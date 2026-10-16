@@ -3,7 +3,7 @@
   "name": "Whisker OS WF2 \u2014 Carousel Render",
   "nodes": [
     {
-      "id": "3a20bda2-4b9b-4060-8c48-65d18c459b7f",
+      "id": "4a5a8ba1-d09a-467a-9f3c-afb071e83901",
       "name": "Run once",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -14,7 +14,7 @@
       "parameters": {}
     },
     {
-      "id": "4bc98be0-3f73-46ef-834e-fda76d308551",
+      "id": "d5705387-9b1e-48e3-af8a-04e3714d29da",
       "name": "Every 5 min",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -34,7 +34,7 @@
       }
     },
     {
-      "id": "c0fbb3e3-29c6-48d5-9760-3c5bdb6bd933",
+      "id": "f33f7948-a794-4b19-803e-f488cdc2c425",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -47,55 +47,55 @@
         "assignments": {
           "assignments": [
             {
-              "id": "bf45a807-0e47-4690-87ac-7385233de1c4",
+              "id": "e6207df4-28dc-44b2-b089-d82987992740",
               "name": "tenant",
               "value": "whisker",
               "type": "string"
             },
             {
-              "id": "66bed802-d4c6-48fe-a2c9-c5fa061f1cf2",
+              "id": "12d032ec-c9be-422a-965b-8f4013be68e5",
               "name": "graph_version",
               "value": "v25.0",
               "type": "string"
             },
             {
-              "id": "2d1493e3-3ce2-44f0-b9be-ed0979754422",
+              "id": "0804e810-05c0-4272-9717-796fa4af18e3",
               "name": "model_planner",
-              "value": "gpt-4.1",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "3a7bd276-f1f5-43ca-bb47-44d1cb454459",
+              "id": "fc9d4993-b8b4-47af-8b3c-751f62327663",
               "name": "model_copy",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "e833fbb5-f296-4024-992f-519ab5a980c6",
+              "id": "26c5b8aa-43bd-4d94-9fc6-33e1a09353b3",
               "name": "model_qa",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "2e9f835e-b3b5-44a1-a6b2-9c77d4cc6d92",
+              "id": "c587cae0-bfea-4ef6-8418-ebb6d09a0f5e",
               "name": "wa_notice_template",
               "value": "agency_os_notice",
               "type": "string"
             },
             {
-              "id": "a6a97bf2-3abe-4417-a97f-e255337589a6",
+              "id": "f5454ea8-8344-4987-a2b3-75c392fb6c0c",
               "name": "wa_template_lang",
               "value": "en",
               "type": "string"
             },
             {
-              "id": "e19bb360-b46f-416b-8879-8bbdce735f8b",
+              "id": "f76da1a3-ad20-4e59-8c2c-c628e3b3ca7a",
               "name": "allowed_formats",
               "value": "carousel,single",
               "type": "string"
             },
             {
-              "id": "31f4ce37-a000-436f-a7d9-642985dfe5b9",
+              "id": "6a114f7e-b6c3-4958-bbec-c65721331a5c",
               "name": "publish_time_local",
               "value": "18:00",
               "type": "string"
@@ -106,7 +106,7 @@
       }
     },
     {
-      "id": "8202f6b5-7099-493e-9a93-e0c11ebea16b",
+      "id": "508fcf95-dd63-4773-80c9-0e72da5b25c5",
       "name": "Claim render job",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -136,7 +136,7 @@
       }
     },
     {
-      "id": "a1260411-70b7-402c-9cac-dc82ae5cf667",
+      "id": "5f51e39b-e7e2-4f76-8a14-18786e6e6bae",
       "name": "Job claimed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -154,7 +154,7 @@
           },
           "conditions": [
             {
-              "id": "7882468f-b285-4ccd-a915-c69453b6d3e2",
+              "id": "86c43ae8-345e-4785-aa36-e57e6dfaf2eb",
               "leftValue": "={{ !!$json.job }}",
               "rightValue": "",
               "operator": {
@@ -170,7 +170,7 @@
       }
     },
     {
-      "id": "7e8251dc-136b-4ab4-979b-76b7f66a945c",
+      "id": "41a78396-6ed8-4df9-a03f-df102ce8da95",
       "name": "Plan slide renders",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -183,7 +183,7 @@
       }
     },
     {
-      "id": "5423a3cd-a317-4d05-b90f-694f8d629846",
+      "id": "3f21e611-d95d-4650-adf9-f2a0adf292d3",
       "name": "Render and store slide",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -210,7 +210,7 @@
       "onError": "continueErrorOutput"
     },
     {
-      "id": "dedf7118-42d1-43eb-a163-ff9ffa236fbc",
+      "id": "0b84649c-8c9c-45f6-9df8-9c7c5c2977d1",
       "name": "Collapse to job",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -223,7 +223,7 @@
       }
     },
     {
-      "id": "72dc2765-1ca5-4aa0-9e3b-bff60bca2717",
+      "id": "7da02be3-fda9-4e24-8221-193ebef72160",
       "name": "Finish job (ok)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -253,7 +253,7 @@
       }
     },
     {
-      "id": "72a78ed2-c47a-45bd-9255-90eefd58cb13",
+      "id": "69caec89-99f5-4fb6-9026-ba330dc13dbe",
       "name": "Log run",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -283,7 +283,7 @@
       }
     },
     {
-      "id": "c02b1466-b978-4cf8-849c-ee1151cf10f4",
+      "id": "5820480c-c6cf-4e3a-9ea8-242c322aa66b",
       "name": "Collect render error",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -297,7 +297,7 @@
       "executeOnce": true
     },
     {
-      "id": "22befbed-2da6-43c8-b342-981468d894bd",
+      "id": "95127449-e539-43a1-af42-bbdb2c2728d1",
       "name": "Finish job (failed)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -327,7 +327,7 @@
       }
     },
     {
-      "id": "0bac1f7c-2d36-402c-bdf5-b79078afb225",
+      "id": "c279da05-2ef9-4b09-8850-21f78cfe88b9",
       "name": "Alert render failure",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,

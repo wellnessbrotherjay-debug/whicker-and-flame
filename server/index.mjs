@@ -1,7 +1,7 @@
 import http from 'node:http';
 import {existsSync, readFileSync, statSync} from 'node:fs';
 import {resolve, extname} from 'node:path';
-import {recipes, site} from './catalog.mjs';
+import {recipes, site, loadRecipes} from './catalog.mjs';
 import {openDatabase} from './db.mjs';
 import {createStore} from './store.mjs';
 import {createAuth, COOKIE} from './auth.mjs';
@@ -16,6 +16,8 @@ const origin = process.env.PUBLIC_ORIGIN || `http://localhost:${port}`;
 const secureCookies = origin.startsWith('https://');
 const admins = new Set(String(process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean));
 
+await loadRecipes();
+setInterval(() => loadRecipes().catch(e => console.error('recipe library refresh failed:', e.message)), 60000);
 const pool = await openDatabase(process.env.DATABASE_URL);
 const store = createStore(pool, recipes);
 const auth = createAuth(pool);

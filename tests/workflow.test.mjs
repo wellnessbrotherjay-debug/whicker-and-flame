@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {openDatabase} from '../server/db.mjs';
 import {createStore} from '../server/store.mjs';
-import {recipes} from '../server/catalog.mjs';
+import recipes from './fixtures/recipes.json' with {type: 'json'};
 
 const pool = await openDatabase(process.env.TEST_DATABASE_URL || 'postgres://localhost/whisker_test');
 test.after(() => pool.end());

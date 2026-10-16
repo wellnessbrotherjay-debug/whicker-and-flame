@@ -3,7 +3,7 @@
   "name": "Whisker OS WF5 \u2014 Insights + Score",
   "nodes": [
     {
-      "id": "55a8b984-2589-4141-a9f6-925803ce338f",
+      "id": "dc12480c-3e04-4de0-bc10-41fe4030202d",
       "name": "Run once",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -14,7 +14,7 @@
       "parameters": {}
     },
     {
-      "id": "347e2e35-72cb-4be6-8dd1-bb20f5797657",
+      "id": "1520e73d-6a2d-4ca2-b46c-952b25bcc0f5",
       "name": "Hourly :05",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -34,7 +34,7 @@
       }
     },
     {
-      "id": "cc149e40-ee38-401e-86b5-af287080bf08",
+      "id": "b6264b0c-67ca-4d4b-95ae-c8ee749825b0",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -47,55 +47,55 @@
         "assignments": {
           "assignments": [
             {
-              "id": "04ecf6d6-261b-4246-b4f0-04c7f13d7b07",
+              "id": "326539e1-06fa-4f41-a4af-677726babd96",
               "name": "tenant",
               "value": "whisker",
               "type": "string"
             },
             {
-              "id": "0644b992-f90e-4059-a91f-a585a7da7478",
+              "id": "835cc177-2482-4d5f-96e7-4cd647d9a46c",
               "name": "graph_version",
               "value": "v25.0",
               "type": "string"
             },
             {
-              "id": "3725239f-08fa-4e4e-ab46-5f81230adade",
+              "id": "08b5275d-b270-4d69-8be7-426e7de2a7d7",
               "name": "model_planner",
-              "value": "gpt-4.1",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "abdaa14e-e027-4d4d-a1e2-60294c39d401",
+              "id": "3a0a1d09-2011-4ba2-93e9-5b22c7b5518c",
               "name": "model_copy",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "bab362e6-510e-42c4-8c79-8c0401e24d75",
+              "id": "ddac65b9-429c-4345-8e6a-a3062c8c31a8",
               "name": "model_qa",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "bf159e8a-7880-4fb0-aef5-7619984d4a39",
+              "id": "285786fe-7bab-4b05-9b33-5c137dfa81ec",
               "name": "wa_notice_template",
               "value": "agency_os_notice",
               "type": "string"
             },
             {
-              "id": "efa84d47-8a1c-4132-8bdd-07a7968a5815",
+              "id": "9a782edc-a861-4c16-bb73-4e1ba737cefb",
               "name": "wa_template_lang",
               "value": "en",
               "type": "string"
             },
             {
-              "id": "e59fdd0a-8796-489f-9096-dcb29fc8e06f",
+              "id": "759221c1-5ad6-4170-95ff-91eae909e12c",
               "name": "allowed_formats",
               "value": "carousel,single",
               "type": "string"
             },
             {
-              "id": "fdfcf6f4-6a7d-4e20-8f2c-e28c707f6511",
+              "id": "c746b8cf-fd7f-450a-b144-859ad7f1a30f",
               "name": "publish_time_local",
               "value": "18:00",
               "type": "string"
@@ -106,7 +106,7 @@
       }
     },
     {
-      "id": "c6b4f278-0683-454f-acd4-3540851a393a",
+      "id": "198e2726-52a8-4cc7-b5fc-9810c02e71b9",
       "name": "Snapshots due",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -136,7 +136,7 @@
       }
     },
     {
-      "id": "4b0247d9-210a-4da7-b9f5-2555667545bd",
+      "id": "cf212f88-57dd-46b0-a33f-f377114bc51b",
       "name": "Split due",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -149,7 +149,7 @@
       }
     },
     {
-      "id": "808647ce-77a9-49aa-8de7-9303acf6e0bf",
+      "id": "92fe420f-8b46-4766-b367-46ed738d5085",
       "name": "Fetch insights",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -184,7 +184,7 @@
       "onError": "continueRegularOutput"
     },
     {
-      "id": "831eb660-f89f-4e72-9b8f-e37ab1149377",
+      "id": "96a92b54-c5c0-45d4-81ce-570b55c2d987",
       "name": "Normalise metrics",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -197,7 +197,7 @@
       }
     },
     {
-      "id": "84ebe8f6-fff0-4270-b60f-2c5dc9f94d66",
+      "id": "ca5872b2-3dab-44b3-bc2c-c2e34f349ad7",
       "name": "Got data?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -215,7 +215,7 @@
           },
           "conditions": [
             {
-              "id": "ef0b6650-5478-4d5f-9e3b-34b1ebe89681",
+              "id": "148a1c2f-a4f7-4bf1-ac0d-d9302c0d88e8",
               "leftValue": "={{ $json.ok }}",
               "rightValue": "",
               "operator": {
@@ -231,7 +231,7 @@
       }
     },
     {
-      "id": "912c5b3a-d17d-46ca-823c-26e6a0b2f95d",
+      "id": "8a25e3eb-b083-4e5f-b3cc-9721c91af763",
       "name": "Upsert snapshot",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -261,7 +261,7 @@
       }
     },
     {
-      "id": "59b19f46-3b18-4060-91ff-e2e13087621d",
+      "id": "d94416b9-d508-41fe-a037-6aed4e7eae89",
       "name": "72h snapshot?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -279,7 +279,7 @@
           },
           "conditions": [
             {
-              "id": "8f663924-3369-4428-a35b-5e1f1ee27c92",
+              "id": "5e22d40d-5b3d-4a20-acb6-5839fa36a757",
               "leftValue": "={{ Number($json.hours) === 72 }}",
               "rightValue": "",
               "operator": {
@@ -295,7 +295,7 @@
       }
     },
     {
-      "id": "5e10fd03-0e79-49fb-b66e-4ae1eeff5add",
+      "id": "05e386dd-3824-4342-a106-1d63d30ea27e",
       "name": "Score 72h",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -325,7 +325,7 @@
       }
     },
     {
-      "id": "82aad1d9-808b-421e-a5a8-b841cbe25cb7",
+      "id": "ad9d72a6-e513-442a-87d1-ec7e6be80774",
       "name": "Summarise",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -339,7 +339,7 @@
       "executeOnce": true
     },
     {
-      "id": "b71ebcf5-20c0-413b-9681-66bc9c55a0c8",
+      "id": "571d38ca-294b-4a45-84b6-2d096b0e6f15",
       "name": "Log run",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -369,7 +369,7 @@
       }
     },
     {
-      "id": "28b7a441-1e15-4546-8211-83becc88c3c6",
+      "id": "aa046c88-0c14-42cd-9b28-34e3e2ea0340",
       "name": "Log fetch error",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,

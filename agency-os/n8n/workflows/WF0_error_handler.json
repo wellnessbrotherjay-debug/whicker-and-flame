@@ -3,7 +3,7 @@
   "name": "Whisker OS WF0 \u2014 Error Handler",
   "nodes": [
     {
-      "id": "b1802eda-d978-4efc-9b44-61bec3324092",
+      "id": "da4fe59d-8d77-420b-84e9-9b0e3ec1291f",
       "name": "Error Trigger",
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
@@ -14,7 +14,7 @@
       "parameters": {}
     },
     {
-      "id": "fd5b7f48-8668-4575-b0ae-fd089e6c76e5",
+      "id": "db264ae2-ba92-4aa5-8c9f-514bd2c579e0",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -27,55 +27,55 @@
         "assignments": {
           "assignments": [
             {
-              "id": "4e7f8573-40d6-47b4-9104-ee9c9344b881",
+              "id": "85329b96-df46-4fa4-a2e0-aca20c3aaff8",
               "name": "tenant",
               "value": "whisker",
               "type": "string"
             },
             {
-              "id": "589a037b-c966-4b8d-8b75-2184b057706c",
+              "id": "c2d03ad2-1909-4a0c-9ff7-e29e39f0a3d1",
               "name": "graph_version",
               "value": "v25.0",
               "type": "string"
             },
             {
-              "id": "7a7f3d79-7bb8-4030-98f9-01aa3dcfc851",
+              "id": "43964c4b-8f05-4b7e-997b-aa464adeb617",
               "name": "model_planner",
-              "value": "gpt-4.1",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "071640c1-3cb8-49b8-b1a2-bc9e3b72cc65",
+              "id": "d3506870-7ce2-4de8-bdfd-fee361b299bb",
               "name": "model_copy",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "109cb4b1-91b5-43dd-95b0-8d60c2d06402",
+              "id": "c19b2b22-61e4-4144-9fcf-c719d746111d",
               "name": "model_qa",
-              "value": "gpt-4.1-mini",
+              "value": "gpt-4.1-nano",
               "type": "string"
             },
             {
-              "id": "6908c504-c44e-487d-bf84-41c149fd87fa",
+              "id": "b1e41ee3-b621-4f2c-a8f7-7d4a7cd05108",
               "name": "wa_notice_template",
               "value": "agency_os_notice",
               "type": "string"
             },
             {
-              "id": "52c63d1d-2429-4898-acb2-2f0865e706d4",
+              "id": "0a8bb6fa-f7ad-421b-b00d-1054ed7af9de",
               "name": "wa_template_lang",
               "value": "en",
               "type": "string"
             },
             {
-              "id": "b8d637fe-9a94-4ae0-9b38-5cb5d1d0de9a",
+              "id": "cc92f6fc-2f63-4ef8-96e5-5c7be8a9e560",
               "name": "allowed_formats",
               "value": "carousel,single",
               "type": "string"
             },
             {
-              "id": "f1324711-cdcb-4e00-afa6-14153b816b28",
+              "id": "f79c59a0-7c33-4b57-ae5b-dfed0ce63aac",
               "name": "publish_time_local",
               "value": "18:00",
               "type": "string"
@@ -86,7 +86,7 @@
       }
     },
     {
-      "id": "8bcee28a-fc27-4cc4-bec7-a6bc8bb450a3",
+      "id": "9f91d720-39a7-4f5e-af92-1cc0e790b409",
       "name": "Format alert",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -99,7 +99,7 @@
       }
     },
     {
-      "id": "b3732912-39c9-4cec-b0e9-b26eb03a6d72",
+      "id": "d5fbf800-338e-41ab-bd63-ce844c7b3890",
       "name": "Log error",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -129,7 +129,7 @@
       }
     },
     {
-      "id": "97685f12-00f7-4a8e-a2a6-51b00863bbbe",
+      "id": "f9f9eb57-2552-48a9-83e1-9e0c99770e42",
       "name": "WhatsApp alert",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,

@@ -56,9 +56,9 @@ CREDS = {
 CONFIG = {
     "tenant": "whisker",
     "graph_version": "v25.0",
-    "model_planner": "gpt-4.1",
-    "model_copy": "gpt-4.1-mini",
-    "model_qa": "gpt-4.1-mini",
+    "model_planner": "gpt-4.1-nano",
+    "model_copy": "gpt-4.1-nano",
+    "model_qa": "gpt-4.1-nano",
     # WhatsApp = the Magnovent bot's number. Token, phone-number id, WABA id and owner number are read
     # from n8n's environment (MAGNOVENT_WA_*), so no WhatsApp secret lives in any workflow.
     "wa_notice_template": "agency_os_notice",   # created by WF9 setup; body "Agency OS update: {{1}}. ..."

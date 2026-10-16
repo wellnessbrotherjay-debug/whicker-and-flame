@@ -4,16 +4,45 @@ import AVKit
 let copper = Color(red: 0.675, green: 0.243, blue: 0.106)
 let cream = Color(red: 0.969, green: 0.945, blue: 0.902)
 let olive = Color(red: 0.40, green: 0.41, blue: 0.26)
-let apiBase = "http://127.0.0.1:4317"
+let apiBase = "https://whiskerflame.safetykat.com"
 
-struct Step: Codable { let title: String; let text: String; let seconds: Int? }
+struct Step: Codable {
+ let title: String; let text: String; let seconds: Int?
+ init(from decoder: Decoder) throws {
+  // The live site sends each step as plain text; the bundled preview sends title + text.
+  if let plain = try? decoder.singleValueContainer().decode(String.self) { title = ""; text = plain; seconds = nil; return }
+  let c = try decoder.container(keyedBy: CodingKeys.self)
+  title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""; text = try c.decode(String.self, forKey: .text); seconds = try c.decodeIfPresent(Int.self, forKey: .seconds)
+ }
+}
 struct Recipe: Codable, Identifiable {
  let id: String; let title: String; let subtitle: String; let category: String
  let time: Int; let servings: Int; let difficulty: String; let chef: String
  let image: String; let description: String; let ingredients: [String]; let steps: [Step]; let allergens: String
+ let categories: [String]
+ enum CodingKeys: String, CodingKey { case id, title, subtitle, category, categories, time, totalMinutes, servings, difficulty, chef, image, description, ingredients, steps, allergens }
+ init(from decoder: Decoder) throws {
+  // Reads both the live site's catalog (categories, totalMinutes) and the bundled preview format.
+  let c = try decoder.container(keyedBy: CodingKeys.self)
+  id = try c.decode(String.self, forKey: .id); title = try c.decode(String.self, forKey: .title)
+  description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
+  subtitle = try c.decodeIfPresent(String.self, forKey: .subtitle) ?? description
+  category = try c.decodeIfPresent(String.self, forKey: .category) ?? (try c.decodeIfPresent([String].self, forKey: .categories))?.first ?? "Recipes"
+  time = try c.decodeIfPresent(Int.self, forKey: .time) ?? c.decodeIfPresent(Int.self, forKey: .totalMinutes) ?? 0
+  servings = try c.decode(Int.self, forKey: .servings); difficulty = try c.decodeIfPresent(String.self, forKey: .difficulty) ?? ""
+  chef = try c.decodeIfPresent(String.self, forKey: .chef) ?? ""; image = try c.decodeIfPresent(String.self, forKey: .image) ?? ""
+  ingredients = try c.decode([String].self, forKey: .ingredients); steps = try c.decode([Step].self, forKey: .steps)
+  allergens = try c.decodeIfPresent(String.self, forKey: .allergens) ?? ""
+  categories = try c.decodeIfPresent([String].self, forKey: .categories) ?? [category]
+ }
+ func encode(to encoder: Encoder) throws { var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(id, forKey: .id); try c.encode(title, forKey: .title) }
 }
 struct Episode: Codable, Identifiable { let id: String; let recipeId: String; let videoUrl: String }
-struct Catalog: Codable { let recipes: [Recipe]; let episodes: [Episode] }
+struct Catalog: Decodable {
+ let recipes: [Recipe]; let episodes: [Episode]
+ enum CodingKeys: String, CodingKey { case recipes, episodes }
+ init(from decoder: Decoder) throws { let c = try decoder.container(keyedBy: CodingKeys.self); recipes = try c.decode([Recipe].self, forKey: .recipes); episodes = (try? c.decode([Episode].self, forKey: .episodes)) ?? [] }
+}
 
 @MainActor final class Kitchen: ObservableObject {
  @Published var recipes: [Recipe] = []
@@ -29,7 +58,7 @@ struct Catalog: Codable { let recipes: [Recipe]; let episodes: [Episode] }
    guard (response as? HTTPURLResponse)?.statusCode == 200 else { return }
    let catalog = try JSONDecoder().decode(Catalog.self, from: data)
    recipes = catalog.recipes; episodes = catalog.episodes; status = "Synced with your kitchen"
-  } catch { status = "Offline · bundled recipes available" }
+  } catch { status = "Offline · bundled recipes available"; print("catalog refresh failed:", error) }
  }
  func toggle(_ id: String) { if saved.contains(id) { saved.remove(id) } else { saved.insert(id) }; UserDefaults.standard.set(Array(saved), forKey: "savedRecipes") }
 }
@@ -46,7 +75,7 @@ struct Eyebrow: View { let text: String; var body: some View { Text(text.upperca
 struct FoodImage: View {
  let file: String; var height: CGFloat = 200
  var body: some View { let name = (file as NSString).lastPathComponent
-  GeometryReader { geometry in Group { if let url = Bundle.main.url(forResource: name, withExtension: nil), let image = UIImage(contentsOfFile: url.path) { Image(uiImage: image).resizable().scaledToFill() } else { Rectangle().fill(cream) } }.frame(width: geometry.size.width, height: height).clipped() }.frame(height: height)
+  GeometryReader { geometry in Group { if let url = Bundle.main.url(forResource: name, withExtension: nil), let image = UIImage(contentsOfFile: url.path) { Image(uiImage: image).resizable().scaledToFill() } else if let remote = URL(string: apiBase + file), file.hasPrefix("/") { AsyncImage(url: remote) { $0.resizable().scaledToFill() } placeholder: { Rectangle().fill(cream) } } else { Rectangle().fill(cream) } }.frame(width: geometry.size.width, height: height).clipped() }.frame(height: height)
  }
 }
 struct PrimaryButtonStyle: ButtonStyle { func makeBody(configuration: Configuration) -> some View { configuration.label.font(.system(size: 14, weight: .semibold)).frame(maxWidth: .infinity).padding(.vertical, 17).background(copper.opacity(configuration.isPressed ? 0.8 : 1)).foregroundStyle(.white).clipShape(Capsule()) } }
@@ -92,11 +121,11 @@ struct RecipesView: View {
  @EnvironmentObject var kitchen: Kitchen
  @State private var query = ""
  @State private var category = "All"
- var filtered: [Recipe] { kitchen.recipes.filter { (category == "All" || $0.category == category) && (query.isEmpty || ([$0.title] + $0.ingredients).joined(separator: " ").localizedCaseInsensitiveContains(query)) } }
+ var filtered: [Recipe] { kitchen.recipes.filter { (category == "All" || $0.categories.contains(category)) && (query.isEmpty || ([$0.title] + $0.ingredients).joined(separator: " ").localizedCaseInsensitiveContains(query)) } }
  var body: some View { ScrollView { VStack(alignment: .leading, spacing: 22) {
   Eyebrow(text: "What are we craving?"); Text("Find your next\nfavourite.").font(.system(size: 42, design: .serif)).tracking(-1)
   HStack { Image(systemName: "magnifyingglass").foregroundStyle(.secondary); TextField("Search recipes or ingredients", text: $query).font(.system(size: 14)).autocorrectionDisabled() }.padding(15).background(cream).clipShape(RoundedRectangle(cornerRadius: 12))
-  ScrollView(.horizontal, showsIndicators: false) { HStack { ForEach(["All","Quick","Comfort","Sweet"], id: \.self) { c in Button(c) { category = c }.font(.system(size: 12)).padding(.horizontal, 20).frame(minHeight: 44).background(category == c ? copper : cream).foregroundStyle(category == c ? .white : .primary).clipShape(Capsule()) } } }
+  ScrollView(.horizontal, showsIndicators: false) { HStack { ForEach(["All"] + kitchen.recipes.flatMap(\.categories).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }, id: \.self) { c in Button(c) { category = c }.font(.system(size: 12)).padding(.horizontal, 20).frame(minHeight: 44).background(category == c ? copper : cream).foregroundStyle(category == c ? .white : .primary).clipShape(Capsule()) } } }
   ForEach(filtered) { RecipeCard(recipe: $0) }
   if filtered.isEmpty { ContentUnavailableView("No recipes found", systemImage: "magnifyingglass", description: Text("Try another ingredient or category.")); Button("Clear filters") { query = ""; category = "All" }.buttonStyle(PrimaryButtonStyle()) }
  }.padding(20) }.background(cream.opacity(0.45)).navigationTitle("Recipes").navigationBarTitleDisplayMode(.inline).refreshable { await kitchen.refresh() } }
