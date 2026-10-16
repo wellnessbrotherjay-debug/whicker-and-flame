@@ -90,14 +90,19 @@ export function planWeek(weekStart, {site, recipes, brand, existing = []}) {
   const name = id => site.characters.find(c => c.id === id)?.name;
   const planned = new Set(existing.filter(p => p.episode).map(p => p.episode));
   const episode = site.episodes.find(e => !planned.has(e.n)) || site.episodes[week % site.episodes.length];
-  const hook = (i, a, b, dish) => fill(brand.hooks[(week + i) % brand.hooks.length], {a: name(a), b: name(b), dish: dish.toLowerCase()});
+  const hook = (i, a, b, dish) => fill(brand.hooks[(week + i) % brand.hooks.length], {a: name(a), b: name(b), dish});
   const collection = id => site.collections.find(c => c.id === id);
   const pick = (id, offset) => { const c = collection(id); return byId(c.recipes[(week + offset) % c.recipes.length]); };
   const pairs = [['nico', 'milo'], ['simba', 'luna'], ['luna', 'milo'], ['simba', 'nico']];
   const pair = pairs[week % pairs.length];
+  // Naughty Cat Café is always Nico's shift with Milo, as the collection promises.
+  const cafeCast = collection('naughty-cat-cafe').characters?.length ? collection('naughty-cat-cafe').characters : ['nico', 'milo'];
   const rotation = ['healthy-cat-kitchen', 'budget-cat', 'passport-of-flavors', 'weekly-cat-kitchen'];
   const thursdayPillar = week % 2 ? 'purr-and-presence' : rotation[(week / 2) % rotation.length | 0];
   const storyRecipe = byId(episode.recipe);
+  // Milo is the one who eats the evidence; when he is in the episode he takes the second part in its hook.
+  const lead = episode.characters.find(c => c !== 'milo') || 'milo';
+  const sidekick = episode.characters.includes('milo') ? 'milo' : episode.characters.find(c => c !== lead) || lead;
   const cafe = pick('naughty-cat-cafe', 0);
   const thursday = pick(thursdayPillar, 1);
   const challenge = pick('cook-play-share', 2);
@@ -105,14 +110,14 @@ export function planWeek(weekStart, {site, recipes, brand, existing = []}) {
 
   return [
     {...base, date: addDays(monday, 0), pillar: 'cat-chef-club', format: 'mystery', episode: episode.n, characters: episode.characters, recipeId: storyRecipe.id,
-      title: `Episode ${episode.n}: ${episode.title}`, hook: hook(0, episode.characters[0], episode.characters[1] || episode.characters[0], storyRecipe.title),
+      title: `Episode ${episode.n}: ${episode.title}`, hook: hook(0, lead, sidekick, storyRecipe.title),
       notes: episode.text + ' End with the episode clue, after a real payoff.'},
     {...base, date: addDays(monday, 1), pillar: collection('cat-chef-club').recipes.includes(storyRecipe.id) ? 'cat-chef-club' : 'weekly-cat-kitchen', format: 'recipe',
       characters: [episode.characters[0]], recipeId: storyRecipe.id, title: `How to cook ${storyRecipe.title}`,
       hook: `The dish from Episode ${episode.n}, for real: ${storyRecipe.title} in ${storyRecipe.totalMinutes} minutes.`,
       notes: 'Food close-ups; every step shown must match the written recipe. Link to the recipe page.'},
-    {...base, date: addDays(monday, 2), pillar: 'naughty-cat-cafe', format: 'gag', characters: pair, recipeId: cafe.id,
-      title: `${name(pair[0])} and ${name(pair[1])} work the café`, hook: hook(2, pair[0], pair[1], cafe.title)},
+    {...base, date: addDays(monday, 2), pillar: 'naughty-cat-cafe', format: 'gag', characters: cafeCast, recipeId: cafe.id,
+      title: `${name(cafeCast[0])} and ${name(cafeCast[1])} work the café`, hook: hook(2, cafeCast[0], cafeCast[1], cafe.title)},
     {...base, date: addDays(monday, 3), pillar: thursdayPillar, format: thursdayPillar === 'purr-and-presence' ? 'calm' : 'recipe',
       characters: [pair[1]], recipeId: thursday.id, title: `${collection(thursdayPillar).name}: ${thursday.title}`,
       hook: thursdayPillar === 'purr-and-presence' ? `Slow down with ${name(pair[1])}: ${thursday.title}, one gentle step at a time.` : hook(3, pair[1], pair[0], thursday.title),

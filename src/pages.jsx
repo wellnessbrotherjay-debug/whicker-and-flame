@@ -4,6 +4,7 @@ import {Link, navigate} from './router.jsx';
 import {useApp, Portrait, RecipeCard, RecipeImage, Meta, SaveButton, Notice, Empty} from './ui.jsx';
 import {scaleLine} from '../shared/shopping.mjs';
 import {SLOTS, suits} from '../shared/kitchen.mjs';
+import {track, countForSource} from './track.js';
 
 const byId = (list, id) => list.find(x => x.id === id);
 const castOf = (site, ids) => ids.map(id => byId(site.characters, id)).filter(Boolean);
@@ -307,6 +308,7 @@ function CookMode({recipe}) {
     return () => clearInterval(tick);
   }, [running]);
   const done = step >= recipe.steps.length;
+  useEffect(() => { if (done) { track('recipe_cooked', {recipeId: recipe.id}); countForSource('recipe_cooked'); } }, [done]);
   const clock = left === null ? '' : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
 
   return <section className="cook">

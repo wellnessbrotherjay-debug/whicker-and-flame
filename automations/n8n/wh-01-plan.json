@@ -1,0 +1,103 @@
+{
+  "id": "wh-01-plan",
+  "name": "Whisker & Heat · 01 plan next week",
+  "active": false,
+  "nodes": [
+    {
+      "id": "a5b1c20a-a3b8-e186-3d5f-ae1f2dbf8f4c",
+      "name": "Sunday 17:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                0
+              ],
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "8d054838-be24-e0f0-a573-ec63dfc89087",
+      "name": "Next Monday",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const d = new Date(); d.setUTCDate(d.getUTCDate() + ((8 - d.getUTCDay()) % 7 || 7));\nreturn [{json: {weekStart: d.toISOString().slice(0, 10)}}];"
+      }
+    },
+    {
+      "id": "ca3ddb70-93f8-a54a-66a9-4eb0ebe225b5",
+      "name": "Plan the week",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_API_BASE }}/api/workflow/plan-week",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { weekStart: $json.weekStart } }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Sunday 17:00": {
+      "main": [
+        [
+          {
+            "node": "Next Monday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Monday": {
+      "main": [
+        [
+          {
+            "node": "Plan the week",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "errorWorkflow": "wh-00-alert"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,205 @@
+{
+  "id": "wh-06-results",
+  "name": "Whisker & Heat · 06 collect results",
+  "active": false,
+  "nodes": [
+    {
+      "id": "f03a815b-052b-fc1a-8b87-197b44f78e32",
+      "name": "Every day 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "9d2c7331-20c4-3aa7-c3c0-94982939a535",
+      "name": "Published posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WH_API_BASE }}/api/workflow/posts/published",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    },
+    {
+      "id": "01e606c9-eb6a-b8b7-365d-8647064b0560",
+      "name": "Instagram posts from the last 60 days",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const since = Date.now() - 60 * 86400000;\nreturn ($json.posts || []).filter(p => p.published.instagram && Date.parse(p.published.instagram.at) > since)\n  .map(p => ({json: {postId: p.id, mediaId: p.published.instagram.postId}}));"
+      }
+    },
+    {
+      "id": "84e4d115-e413-418f-6d28-620ff5fcbb28",
+      "name": "Ask Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://graph.facebook.com/' + $env.WH_GRAPH_VERSION }}/{{ $json.mediaId }}/insights",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "metric",
+              "value": "views,reach,saved,shares,likes,comments"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Instagram Graph"
+        }
+      }
+    },
+    {
+      "id": "75aebb8e-74ab-4b65-2284-45b167740ff2",
+      "name": "Name the numbers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const names = {views: 'views', reach: 'reach', saved: 'saves', shares: 'shares', likes: 'likes', comments: 'comments'};\nreturn $input.all().map((item, i) => {\n  const metrics = {};\n  for (const m of item.json.data || []) if (names[m.name]) metrics[names[m.name]] = m.values?.[0]?.value ?? m.total_value?.value ?? 0;\n  return {json: {postId: $('Instagram posts from the last 60 days').all()[i].json.postId, body: {platform: 'instagram', metrics}}};\n});"
+      }
+    },
+    {
+      "id": "918fcd90-43c2-f95e-7ac8-b2151f3bb671",
+      "name": "Save the results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_API_BASE + '/api/workflow/posts/' + $json.postId + '/metrics' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every day 07:00": {
+      "main": [
+        [
+          {
+            "node": "Published posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Published posts": {
+      "main": [
+        [
+          {
+            "node": "Instagram posts from the last 60 days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram posts from the last 60 days": {
+      "main": [
+        [
+          {
+            "node": "Ask Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Instagram": {
+      "main": [
+        [
+          {
+            "node": "Name the numbers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Name the numbers": {
+      "main": [
+        [
+          {
+            "node": "Save the results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "errorWorkflow": "wh-00-alert"
+  },
+  "pinData": {}
+}

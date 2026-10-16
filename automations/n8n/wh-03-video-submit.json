@@ -1,0 +1,225 @@
+{
+  "id": "wh-03-video-submit",
+  "name": "Whisker & Heat · 03 submit video jobs",
+  "active": false,
+  "nodes": [
+    {
+      "id": "23ecbfda-f464-f627-8bf3-7110b29b2e6b",
+      "name": "Every 10 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "78513bf4-123d-db63-5ea0-13febcb7767c",
+      "name": "Generation switched on?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "jsCode": "if ($env.WH_ENABLE_GENERATION !== 'true' || !$env.WH_VIDEO_SUBMIT_URL) return []; return [{json: {}}];"
+      }
+    },
+    {
+      "id": "1aa66dda-8816-d661-b363-c33759aacd8b",
+      "name": "Claim one job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_API_BASE }}/api/workflow/claim",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    },
+    {
+      "id": "fe6e62c5-6049-5e8d-693c-ab4d1737eb34",
+      "name": "A job exists",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const j = $json.job; return j ? [{json: j}] : [];"
+      }
+    },
+    {
+      "id": "9e1ee39a-8a3b-b68a-e122-b2fb4ca96cb1",
+      "name": "Submit to the video provider",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_VIDEO_SUBMIT_URL }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { prompt: $json.prompt, duration: 10, aspect_ratio: '9:16', resolution: '720p' } }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Video Provider"
+        }
+      }
+    },
+    {
+      "id": "72dbb14f-28c6-960e-23c1-8f945f319fc6",
+      "name": "Keep the request id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const id = $json.request_id || $json.id || $json.requestId;\nif (!id) throw new Error('The provider returned no request id. Check its history before submitting again.');\nreturn [{json: {jobId: $('A job exists').first().json.id, requestId: String(id)}}];"
+      }
+    },
+    {
+      "id": "95ab5a55-67fb-0ed6-8c79-cf6a6d64a4cc",
+      "name": "Record the request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_API_BASE }}/api/workflow/register",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 10 minutes": {
+      "main": [
+        [
+          {
+            "node": "Generation switched on?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generation switched on?": {
+      "main": [
+        [
+          {
+            "node": "Claim one job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim one job": {
+      "main": [
+        [
+          {
+            "node": "A job exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A job exists": {
+      "main": [
+        [
+          {
+            "node": "Submit to the video provider",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit to the video provider": {
+      "main": [
+        [
+          {
+            "node": "Keep the request id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep the request id": {
+      "main": [
+        [
+          {
+            "node": "Record the request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "errorWorkflow": "wh-00-alert"
+  },
+  "pinData": {}
+}

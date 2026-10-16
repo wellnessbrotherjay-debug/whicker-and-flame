@@ -1,0 +1,104 @@
+{
+  "id": "wh-00-alert",
+  "name": "Whisker & Heat · 00 failure alert",
+  "active": false,
+  "nodes": [
+    {
+      "id": "f7ec8d2f-c17b-b9d2-94eb-958bcb3b40b8",
+      "name": "A workflow failed",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2545fd2c-522f-0048-3c6b-65fcae89808c",
+      "name": "Describe the failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const e = $json.execution || {};\nreturn [{json: {text: 'Whisker & Heat workflow failed: ' + ($json.workflow?.name || '?') + ' at ' + (e.lastNodeExecuted || '?') + ' — ' + (e.error?.message || 'no message') + ' ' + (e.url || '')}}];"
+      }
+    },
+    {
+      "id": "9b9a7484-e287-9fc9-2778-ddca30283c69",
+      "name": "Only when an alert address is set",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "jsCode": "if (!$env.WH_ALERT_WEBHOOK) return []; return $input.all();"
+      }
+    },
+    {
+      "id": "52ee4036-42e0-9f19-2a97-df1fbffe02e6",
+      "name": "Send alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_ALERT_WEBHOOK }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { text: $json.text } }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "A workflow failed": {
+      "main": [
+        [
+          {
+            "node": "Describe the failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Describe the failure": {
+      "main": [
+        [
+          {
+            "node": "Only when an alert address is set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only when an alert address is set": {
+      "main": [
+        [
+          {
+            "node": "Send alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "errorWorkflow": "wh-00-alert"
+  },
+  "pinData": {}
+}

@@ -6,10 +6,11 @@ import {api} from './api.js';
 import {Link, navigate, useLocation} from './router.jsx';
 import {AppContext, Logo, Notice} from './ui.jsx';
 import {Discover, Cook, RecipePage, Characters, Story, EpisodePage, Community, NotFound} from './pages.jsx';
-import {SignIn, Kitchen, Studio} from './kitchen.jsx';
+import {SignIn, Kitchen} from './kitchen.jsx';
+import {Studio, PostEditor} from './studio.jsx';
 import {storeFor, readLocal, mergeLocalIntoAccount} from './kitchenStore.js';
 import {shoppingFor} from '../shared/shopping.mjs';
-import {track} from './track.js';
+import {track, rememberSource, countForSource} from './track.js';
 
 const NAV = [['/', 'Discover'], ['/recipes', 'Cook'], ['/kitchen', 'My Kitchen'], ['/characters', 'Characters'], ['/community', 'Community']];
 
@@ -30,7 +31,7 @@ function App() {
       setError('');
     } catch (e) { setError(e.message); }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { rememberSource(); load(); }, []);
   useEffect(() => { setMenu(false); }, [location.path]);
   useEffect(() => {
     if (!catalog) return;
@@ -52,6 +53,7 @@ function App() {
     const next = await work(...args);
     setKitchen(next);
     track(event, args[0] && typeof args[0] === 'object' ? {recipeId: args[0].recipeId} : {});
+    countForSource(event);
     return next;
   };
   const context = {
@@ -89,7 +91,8 @@ function App() {
   else if (path === '/kitchen') page = <Kitchen hash={hash}/>;
   else if (path === '/community') page = <Community/>;
   else if (path === '/signin') page = <SignIn search={search}/>;
-  else if (path === '/studio') page = <Studio/>;
+  else if (path === '/studio') page = <Studio hash={hash}/>;
+  else if (path.startsWith('/studio/post/')) page = <PostEditor key={path} id={path.slice(13)} search={search}/>;
   else page = <NotFound/>;
   const current = to => to === '/' ? path === '/' || path.startsWith('/story') : path === to || path.startsWith(to + '/');
 

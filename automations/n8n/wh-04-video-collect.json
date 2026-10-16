@@ -1,0 +1,220 @@
+{
+  "id": "wh-04-video-collect",
+  "name": "Whisker & Heat · 04 collect finished videos",
+  "active": false,
+  "nodes": [
+    {
+      "id": "63234464-9c86-7e28-ce45-274a162e7c5b",
+      "name": "Every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "447e1ae7-beb2-350d-5b0c-01b40e70fcec",
+      "name": "Collection switched on?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "jsCode": "if (!$env.WH_VIDEO_STATUS_URL) return []; return [{json: {}}];"
+      }
+    },
+    {
+      "id": "1e0bf20b-87c4-2326-fe55-77b14d442743",
+      "name": "Jobs being generated",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WH_API_BASE }}/api/workflow/pending",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    },
+    {
+      "id": "c62f5232-ae8a-e5b6-cf13-c42a19022b03",
+      "name": "One per job",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "fieldToSplitOut": "jobs",
+        "options": {}
+      }
+    },
+    {
+      "id": "4ebc939b-d4b8-2f01-3021-0fe447d02245",
+      "name": "Ask the provider",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WH_VIDEO_STATUS_URL.replace('{id}', $json.requestId) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Video Provider"
+        }
+      }
+    },
+    {
+      "id": "dd5ea91b-4abc-9b02-163d-d583547485ec",
+      "name": "Finished or failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().flatMap((item, i) => {\n  const job = $('One per job').all()[i].json, r = item.json;\n  const status = String(r.status || '').toLowerCase();\n  const url = r.video_url || r.output?.video_url || r.result?.url;\n  if (url && /complete|succeed|done|finished/.test(status)) return [{json: {path: 'complete', body: {jobId: job.id, videoUrl: url}}}];\n  if (/fail|error|cancel/.test(status)) return [{json: {path: 'fail', body: {jobId: job.id, error: r.error || status}}}];\n  return [];\n});"
+      }
+    },
+    {
+      "id": "9038ffdc-7cee-93f2-9cdb-5f5bb206dee5",
+      "name": "Report the result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_API_BASE + '/api/workflow/' + $json.path }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Collection switched on?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collection switched on?": {
+      "main": [
+        [
+          {
+            "node": "Jobs being generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jobs being generated": {
+      "main": [
+        [
+          {
+            "node": "One per job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One per job": {
+      "main": [
+        [
+          {
+            "node": "Ask the provider",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask the provider": {
+      "main": [
+        [
+          {
+            "node": "Finished or failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finished or failed": {
+      "main": [
+        [
+          {
+            "node": "Report the result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "errorWorkflow": "wh-00-alert"
+  },
+  "pinData": {}
+}

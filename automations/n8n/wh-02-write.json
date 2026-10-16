@@ -1,0 +1,249 @@
+{
+  "id": "wh-02-write",
+  "name": "Whisker & Heat · 02 draft scripts and captions",
+  "active": false,
+  "nodes": [
+    {
+      "id": "08d9ca87-8df3-e8fb-e8fd-d41f1415cc3f",
+      "name": "Every 30 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f84b5365-f2b1-77d0-e553-e09368c04433",
+      "name": "Ideas waiting for a draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WH_API_BASE }}/api/workflow/posts/ideas",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    },
+    {
+      "id": "c15350dd-6c44-7239-46e6-2efcf43275c2",
+      "name": "Story bible and recipes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WH_API_BASE }}/api/workflow/context",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    },
+    {
+      "id": "d7535f73-8246-005a-2f9b-ca1005e8af93",
+      "name": "One request per idea",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const {site, recipes, brand} = $('Story bible and recipes').first().json;\nconst posts = $('Ideas waiting for a draft').first().json.posts || [];\nreturn posts.map(post => {\n  const recipe = recipes.find(r => r.id === post.recipeId);\n  const episode = site.episodes.find(e => e.n === post.episode);\n  const cast = post.characters.map(id => ({...site.characters.find(c => c.id === id), ...brand.characters[id]}));\n  const format = brand.formats[post.format];\n  const system = [\n    'You write short vertical videos for Whisker & Heat, a cat-led cooking brand. Four original fictional cats: Luna, Simba, Nico, Milo.',\n    'Rules: ' + brand.style.rules.join(' '),\n    'Stories can be exaggerated; recipes must be real and safe. Every cooking step shown must match the written recipe exactly. Never present human food as food for cats. No medical, weight-loss or price claims. No allergy jokes.',\n  ].join('\\n');\n  const user = JSON.stringify({\n    task: 'Write the draft for this post.', format: format.label, seconds: format.seconds, collection: site.collections.find(c => c.id === post.pillar),\n    title: post.title, hookIdea: post.hook, notes: post.notes, poll: post.poll, platforms: post.platforms,\n    characters: cast.map(c => ({name: c.name, role: c.role, voice: c.voice, catchphrase: c.catchphrase, never: c.never})),\n    episode: episode ? {n: episode.n, title: episode.title, synopsis: episode.text} : null,\n    recipe: recipe ? {title: recipe.title, servings: recipe.servings, minutes: recipe.totalMinutes, ingredients: recipe.ingredients, steps: recipe.steps} : null,\n    link: 'Captions end with: Recipe at the link in bio.',\n  });\n  const captions = Object.fromEntries(post.platforms.map(p => [p, {type: 'string', description: p + ' caption, native to that platform, under 2000 characters'}]));\n  return {json: {postId: post.id, request: {\n    model: 'claude-opus-5-5', max_tokens: 16000, output_config: {effort: 'medium', format: {type: 'json_schema', schema: {\n      type: 'object', additionalProperties: false, required: ['hook', 'script', 'shotlist', 'captions', 'hashtags'],\n      properties: {\n        hook: {type: 'string', description: 'What happens in the first 1-2 seconds'},\n        script: {type: 'string', description: 'Lines as SPEAKER: line, plus [action] notes'},\n        shotlist: {type: 'string', description: 'Numbered shots with framing and on-screen text'},\n        captions: {type: 'object', additionalProperties: false, required: post.platforms, properties: captions},\n        hashtags: {type: 'string'}}}}},\n    system, messages: [{role: 'user', content: user}]}}};\n});"
+      }
+    },
+    {
+      "id": "856ab288-7bd3-a694-62ad-d845170b55c4",
+      "name": "Ask Claude for the draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 300000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "id": "f1ce767f-764c-c2b2-3a17-e38546bba015",
+      "name": "Read the draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().map((item, i) => {\n  const r = item.json;\n  const postId = $('One request per idea').all()[i].json.postId;\n  if (r.stop_reason === 'refusal') throw new Error('Claude declined post ' + postId + ': ' + (r.stop_details?.explanation || r.stop_details?.category || 'no detail'));\n  if (r.stop_reason === 'max_tokens') throw new Error('Draft for post ' + postId + ' was cut off; raise max_tokens.');\n  const text = (r.content || []).find(b => b.type === 'text')?.text;\n  if (!text) throw new Error('No draft text for post ' + postId);\n  return {json: {postId, draft: JSON.parse(text)}};\n});"
+      }
+    },
+    {
+      "id": "cad92a6c-3a2b-aee7-2800-71f1f929063d",
+      "name": "Save the draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_API_BASE + '/api/workflow/posts/' + $json.postId + '/draft' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.draft }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 30 minutes": {
+      "main": [
+        [
+          {
+            "node": "Ideas waiting for a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ideas waiting for a draft": {
+      "main": [
+        [
+          {
+            "node": "Story bible and recipes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Story bible and recipes": {
+      "main": [
+        [
+          {
+            "node": "One request per idea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One request per idea": {
+      "main": [
+        [
+          {
+            "node": "Ask Claude for the draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Claude for the draft": {
+      "main": [
+        [
+          {
+            "node": "Read the draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read the draft": {
+      "main": [
+        [
+          {
+            "node": "Save the draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "errorWorkflow": "wh-00-alert"
+  },
+  "pinData": {}
+}

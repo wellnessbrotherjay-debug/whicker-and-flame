@@ -1,0 +1,376 @@
+{
+  "id": "wh-05-publish",
+  "name": "Whisker & Heat · 05 publish to Instagram",
+  "active": false,
+  "nodes": [
+    {
+      "id": "cd8b048d-5586-032e-19c5-fe6eba2d0baf",
+      "name": "Every 15 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "84fc6512-1203-0bbb-0931-0371088a5791",
+      "name": "Posts due now",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WH_API_BASE }}/api/workflow/posts/due",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    },
+    {
+      "id": "17fca79e-07ee-eae3-5bfc-2c92f4baf28b",
+      "name": "Instagram posts not yet published",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "jsCode": "if (!$env.WH_IG_USER_ID) return [];\nreturn ($json.posts || []).filter(p => p.pending.includes('instagram')).map(p => ({json: {\n  postId: p.id, video: !/\\.(jpe?g|png)(\\?|$)/i.test(p.mediaUrl), mediaUrl: p.mediaUrl,\n  caption: [p.captions.instagram, p.hashtags].filter(Boolean).join('\\n\\n')}}));"
+      }
+    },
+    {
+      "id": "3f8d7b66-c9b5-b5af-f36f-0701c90ba897",
+      "name": "Create the media container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/' + $env.WH_GRAPH_VERSION }}/{{ $env.WH_IG_USER_ID }}/media",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "={{ $json.video ? 'REELS' : 'IMAGE' }}"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ $json.video ? $json.mediaUrl : '' }}"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $json.video ? '' : $json.mediaUrl }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.caption }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Instagram Graph"
+        }
+      }
+    },
+    {
+      "id": "f7f49316-20a1-aa4f-cbd5-f1128ef6d40c",
+      "name": "Let Instagram process it",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "amount": 90,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "5123db5f-7d3f-5dca-43e9-ae01d2c04452",
+      "name": "Is it ready?",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://graph.facebook.com/' + $env.WH_GRAPH_VERSION }}/{{ $('Create the media container').item.json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "status_code"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Instagram Graph"
+        }
+      }
+    },
+    {
+      "id": "be81c031-6427-592b-03cc-62c6aa03c378",
+      "name": "Only finished containers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().flatMap((item, i) => {\n  const status = item.json.status_code;\n  if (status === 'ERROR' || status === 'EXPIRED') throw new Error('Instagram could not process post ' + $('Instagram posts not yet published').all()[i].json.postId + ': ' + status);\n  return status === 'FINISHED' || !status ? [{json: {postId: $('Instagram posts not yet published').all()[i].json.postId, creationId: $('Create the media container').all()[i].json.id}}] : [];\n});"
+      }
+    },
+    {
+      "id": "25fb4449-28ff-bdd3-b09b-7f19f2891d01",
+      "name": "Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/' + $env.WH_GRAPH_VERSION }}/{{ $env.WH_IG_USER_ID }}/media_publish",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $json.creationId }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Instagram Graph"
+        }
+      }
+    },
+    {
+      "id": "86ef1f4c-c9e7-25d6-897e-5fe728da4cbd",
+      "name": "Get the post link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://graph.facebook.com/' + $env.WH_GRAPH_VERSION }}/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "permalink"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Instagram Graph"
+        }
+      }
+    },
+    {
+      "id": "36a12f25-6bdd-0540-ce10-77ec3fe4f307",
+      "name": "Record it in the Studio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WH_API_BASE + '/api/workflow/posts/' + $('Only finished containers').item.json.postId + '/published' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { platform: 'instagram', url: $json.permalink, postId: $json.id } }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Whisker Heat API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 15 minutes": {
+      "main": [
+        [
+          {
+            "node": "Posts due now",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Posts due now": {
+      "main": [
+        [
+          {
+            "node": "Instagram posts not yet published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram posts not yet published": {
+      "main": [
+        [
+          {
+            "node": "Create the media container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create the media container": {
+      "main": [
+        [
+          {
+            "node": "Let Instagram process it",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Let Instagram process it": {
+      "main": [
+        [
+          {
+            "node": "Is it ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is it ready?": {
+      "main": [
+        [
+          {
+            "node": "Only finished containers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only finished containers": {
+      "main": [
+        [
+          {
+            "node": "Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish": {
+      "main": [
+        [
+          {
+            "node": "Get the post link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the post link": {
+      "main": [
+        [
+          {
+            "node": "Record it in the Studio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "errorWorkflow": "wh-00-alert"
+  },
+  "pinData": {}
+}
