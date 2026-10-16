@@ -1,0 +1,80 @@
+{
+ "characters": {
+  "luna": {
+   "look": "Silver-gray tabby, green eyes, cream apron, olive scarf. Holds fresh basil. Investigative, slightly narrowed eyes.",
+   "voice": "Measured, curious, a little theatrical. Asks questions she already suspects the answer to.",
+   "catchphrase": "Interesting… very suspicious.",
+   "never": "Never cruel; her suspicion is affectionate. Never ignores a real clue."
+  },
+  "simba": {
+   "look": "Fluffy ginger tabby, amber eyes, white chef jacket and toque, copper neckerchief. Holds a wooden spoon. Big, confident expressions.",
+   "voice": "Loud, dramatic, quick. Announces everything as a triumph, especially mistakes.",
+   "catchphrase": "That was exactly what I meant to do!",
+   "never": "Never shown doing anything unsafe as an instruction; his chaos is comic, not a technique."
+  },
+  "nico": {
+   "look": "Black-and-white tuxedo cat, golden eyes, neat cream jacket and olive apron, folded linen napkin over one arm. Upright posture.",
+   "voice": "Calm, polite, formal sentences. Stays composed while things fall apart.",
+   "catchphrase": "We can resolve this with dignity.",
+   "never": "Never loses his manners; his comedy is restraint."
+  },
+  "milo": {
+   "look": "Fluffy cream and caramel cat, blue eyes, tan apron, flour-smudged cheek. Often holding or eating a pastry.",
+   "voice": "Soft, sweet, short sentences, mouth often full.",
+   "catchphrase": "I was just checking…",
+   "never": "Never mean-spirited; he causes trouble by accident."
+  }
+ },
+ "style": {
+  "look": "Photorealistic expressive anthropomorphic cats, natural fur, tactile linen cooking clothes, warm cream and copper rustic kitchen, soft daylight, food that looks delicious and real.",
+  "palette": "Cream #F7F1E6, warm white #FFFCF6, charcoal #292722, copper #AC3E1B, maroon #7A3B44, olive #666843.",
+  "type": "Playfair Display for titles, Inter for captions and on-screen text.",
+  "rules": [
+   "Keep each cat's fur, eye colour, clothing and proportions identical in every post.",
+   "Show the problem in the first one to two seconds; no logos or slow intros before the hook.",
+   "Give a real payoff (joke, reveal or a useful cooking moment) before any cliffhanger.",
+   "What the video shows of a recipe must match the written recipe.",
+   "Original designs only; never copy another creator's characters, captions or scenes.",
+   "Recipes are for people; never suggest feeding human food to real cats.",
+   "No jokes about exposing anyone to an allergen."
+  ]
+ },
+ "prompts": {
+  "scene": "{style}. Characters: {characterLooks}. Scene: {scene}. Vertical 9:16, consistent characters, no text overlays, no watermarks, no human hands, no unsafe cooking.",
+  "food": "Natural food photography of {recipe}, rustic wooden table, linen napkin, warm soft daylight, cream and copper tones, appetizing, realistic, no text, no people, no animals.",
+  "script": "Write a {seconds}-second {format} short for Whisker & Heat. Characters: {characters}. Hook in the first 2 seconds. Real payoff. If a recipe is shown ({recipe}), every step must match it. Return: hook, script lines with speaker, shot list, on-screen text."
+ },
+ "formats": {
+  "gag": {"label": "15-second visual gag", "seconds": 15},
+  "story": {"label": "Story with a twist", "seconds": 30},
+  "recipe": {"label": "Recipe with food close-ups", "seconds": 45},
+  "interview": {"label": "Kitchen interview after a disaster", "seconds": 25},
+  "challenge": {"label": "Character-vs-character challenge", "seconds": 35},
+  "calm": {"label": "Calm, sensory cooking sequence", "seconds": 40},
+  "mystery": {"label": "Part of the mystery, with a standalone payoff", "seconds": 35}
+ },
+ "hooks": [
+  "{a} shouts that the most important recipe in the city has gone missing — while {b} is visibly chewing the paper.",
+  "{a} promises the perfect {dish}. Two seconds later, the kitchen is on fire with ambition.",
+  "{a} calmly sets a flawless table. Behind them, {b} is wearing the dessert.",
+  "Sixty seconds. One {dish}. {a} versus {b}. Only one of them read the recipe.",
+  "{a} sniffs the {dish}. ‘Interesting… very suspicious.’",
+  "‘Tell us what happened in the kitchen.’ {a}, covered in flour, takes a long breath."
+ ],
+ "community": [
+  "Who do you suspect?",
+  "What should Simba cook next?",
+  "Which cat would you trust with dessert?",
+  "Choose the next cuisine.",
+  "Would you try this recipe?"
+ ],
+ "cadence": {
+  "shortsPerWeek": 5,
+  "storyEpisodesPerWeek": 1,
+  "recipeVideosPerWeek": 2,
+  "postDays": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+ },
+ "mix": {
+  "comfort": 25, "healthy": 20, "budget": 15, "international": 15, "weekly": 10, "calm": 5, "challenge": 10
+ }
+}

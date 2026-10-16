@@ -45,6 +45,48 @@ CREATE TABLE IF NOT EXISTS shoppingmarks (
   state text NOT NULL CHECK (state IN ('checked', 'removed')),
   PRIMARY KEY (fkuserid, itemkey)
 );
+CREATE TABLE IF NOT EXISTS posts (
+  id uuid PRIMARY KEY,
+  title text NOT NULL,
+  status text NOT NULL CHECK (status IN ('idea', 'script', 'production', 'review', 'approved', 'scheduled', 'published')),
+  pillar text NOT NULL,
+  format text NOT NULL,
+  platforms text[] NOT NULL,
+  characters text[] NOT NULL DEFAULT '{}',
+  recipeid text,
+  episode integer,
+  hook text NOT NULL DEFAULT '',
+  script text NOT NULL DEFAULT '',
+  shotlist text NOT NULL DEFAULT '',
+  captions jsonb NOT NULL DEFAULT '{}',
+  hashtags text NOT NULL DEFAULT '',
+  poll text NOT NULL DEFAULT '',
+  notes text NOT NULL DEFAULT '',
+  reviewnote text NOT NULL DEFAULT '',
+  mediaurl text,
+  plandate date,
+  plantime text,
+  scheduledfor timestamptz,
+  slug text NOT NULL UNIQUE,
+  published jsonb NOT NULL DEFAULT '{}',
+  metrics jsonb NOT NULL DEFAULT '{}',
+  createddate timestamptz NOT NULL DEFAULT now(),
+  modifieddate timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ix_posts_plandate ON posts(plandate);
+CREATE TABLE IF NOT EXISTS brandkit (
+  id integer PRIMARY KEY CHECK (id = 1),
+  content jsonb NOT NULL,
+  modifieddate timestamptz NOT NULL DEFAULT now()
+);
+-- Counts only: how often a post's link was opened and what followed. No person is recorded.
+CREATE TABLE IF NOT EXISTS linkcounts (
+  slug text NOT NULL,
+  event text NOT NULL CHECK (event IN ('open', 'save', 'plan', 'list', 'cooked')),
+  day date NOT NULL DEFAULT current_date,
+  count integer NOT NULL DEFAULT 0,
+  PRIMARY KEY (slug, event, day)
+);
 CREATE TABLE IF NOT EXISTS jobs (
   id uuid PRIMARY KEY,
   recipeid text NOT NULL,
@@ -53,6 +95,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   videourl text,
   requestid text,
   error text,
+  fkpostid uuid REFERENCES posts(id) ON DELETE SET NULL,
   createddate timestamptz NOT NULL DEFAULT now()
 );
 `;

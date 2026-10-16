@@ -6,6 +6,7 @@ import {openDatabase} from './db.mjs';
 import {createStore} from './store.mjs';
 import {createAuth, COOKIE} from './auth.mjs';
 import {createKitchen} from './kitchen.mjs';
+import {createStudio} from './studio.mjs';
 
 try { process.loadEnvFile('.env'); } catch {}
 
@@ -19,6 +20,7 @@ const pool = await openDatabase(process.env.DATABASE_URL);
 const store = createStore(pool, recipes);
 const auth = createAuth(pool);
 const kitchen = createKitchen(pool, recipes);
+const studio = createStudio(pool, {site, recipes, timezone: process.env.CONTENT_TIMEZONE || 'Asia/Makassar'});
 const vite = production ? null : await (await import('vite')).createServer({server: {middlewareMode: true}, appType: 'spa'});
 
 const DIST = resolve('dist');
@@ -69,7 +71,7 @@ function limit(req) {
   attempts.set(key, recent);
 }
 
-async function api(req, res, path) {
+async function api(req, res, path, query) {
   const workflow = path.startsWith('/api/workflow/');
   if (workflow) {
     if (!process.env.WF_WORKFLOW_TOKEN || req.headers.authorization !== `Bearer ${process.env.WF_WORKFLOW_TOKEN}`) throw new HttpError(401, 'Workflow token required.');
@@ -119,11 +121,43 @@ async function api(req, res, path) {
     return json(res, 200, {kitchen: await kitchen.removeFromPlan(user.id, path.split('/')[3])});
   }
 
+  // Agency OS (Studio): the kitchen team only.
+  const id = path.match(/^\/api\/studio\/posts\/([0-9a-f-]{36})(?:\/(move|delete))?$/);
+  if (path.startsWith('/api/studio/')) {
+    admin();
+    if (route === 'GET /api/studio/posts') return json(res, 200, await studio.list({from: query.get('from'), to: query.get('to')}));
+    if (route === 'POST /api/studio/posts') return json(res, 201, await studio.create(await body(req)));
+    if (route === 'POST /api/studio/plan-week') return json(res, 200, {created: await studio.planWeek((await body(req)).weekStart)});
+    if (route === 'GET /api/studio/brand') return json(res, 200, await studio.brand());
+    if (route === 'POST /api/studio/brand') return json(res, 200, await studio.setBrand(await body(req)));
+    if (id && req.method === 'POST' && !id[2]) return json(res, 200, await studio.update(id[1], await body(req)));
+    if (id && req.method === 'POST' && id[2] === 'move') { const b = await body(req); return json(res, 200, await studio.move(id[1], b.status, b.note)); }
+    if (id && req.method === 'POST' && id[2] === 'delete') { await studio.remove(id[1]); return json(res, 200, {ok: true}); }
+    throw new HttpError(404, 'Endpoint not found.');
+  }
+  if (route === 'POST /api/track') {
+    const b = await body(req);
+    if (typeof b.slug === 'string' && /^[0-9a-f]{8}$/.test(b.slug)) await studio.count(b.slug, b.event);
+    return json(res, 200, {ok: true});
+  }
+
   if (route === 'GET /api/status') return json(res, 200, {workflowConfigured: !!process.env.WF_WORKFLOW_TOKEN, videoGeneration: 'not_connected', instagram: 'not_connected'});
   if (route === 'GET /api/jobs') { admin(); return json(res, 200, await store.jobs()); }
   if (route === 'POST /api/jobs') { admin(); return json(res, 201, await store.createJob(await body(req))); }
   if (req.method === 'POST' && /^\/api\/jobs\/[^/]+\/approve$/.test(path)) { admin(); return json(res, 200, await store.approve(path.split('/')[3])); }
 
+  const flow = path.match(/^\/api\/workflow\/posts\/([0-9a-f-]{36})\/(draft|published|metrics)$/);
+  if (route === 'GET /api/workflow/context') return json(res, 200, {site, recipes, brand: await studio.brand()});
+  if (route === 'GET /api/workflow/posts/ideas') return json(res, 200, {posts: await studio.needingScript()});
+  if (route === 'GET /api/workflow/posts/due') return json(res, 200, {posts: await studio.due()});
+  if (route === 'GET /api/workflow/posts/published') return json(res, 200, {posts: (await studio.list()).filter(p => p.status === 'published')});
+  if (route === 'POST /api/workflow/plan-week') return json(res, 200, {created: await studio.planWeek((await body(req)).weekStart)});
+  if (flow && req.method === 'POST') {
+    const b = await body(req);
+    if (flow[2] === 'draft') return json(res, 200, await studio.draft(flow[1], b));
+    if (flow[2] === 'published') return json(res, 200, await studio.markPublished(flow[1], b));
+    return json(res, 200, await studio.recordMetrics(flow[1], b));
+  }
   if (route === 'POST /api/workflow/claim') return json(res, 200, {job: await store.claim()});
   if (route === 'GET /api/workflow/pending') return json(res, 200, {jobs: await store.pending()});
   if (route === 'POST /api/workflow/register') { const b = await body(req); return json(res, 200, await store.register(b.jobId, b.requestId)); }
@@ -154,7 +188,13 @@ const server = http.createServer(async (req, res) => {
       await pool.query('SELECT 1');
       return json(res, 200, {ok: true});
     }
-    if (path.startsWith('/api/')) return await api(req, res, path);
+    if (path.startsWith('/api/')) return await api(req, res, path, new URL(req.url, origin).searchParams);
+    const go = path.match(/^\/go\/([0-9a-f]{8})$/);
+    if (go) {
+      const target = await studio.follow(go[1]);
+      res.writeHead(target ? 302 : 404, {Location: target || '/', 'Cache-Control': 'no-store', ...SECURITY});
+      return res.end();
+    }
     if (vite) return vite.middlewares(req, res);
     return serveFile(req, res, path);
   } catch (error) {
