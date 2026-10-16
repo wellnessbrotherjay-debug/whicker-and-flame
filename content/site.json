@@ -20,20 +20,166 @@
   "image": "/assets/whisker-heat-cast-v1.png"
  },
  "characters": [
-  {"id": "luna", "name": "Luna", "role": "The Taste Detective", "bio": "Clever, elegant and endlessly curious. Luna can spot an ingredient by its scent, but a mystery can distract her from her own cooking.", "quote": "Interesting… very suspicious.", "relationship": "She suspects Milo, yet quietly relies on his observations."},
-  {"id": "simba", "name": "Simba", "role": "The Chaos Chef", "bio": "Bold, dramatic and inventive. Simba wants to become a culinary legend; following the recipe is where things get complicated.", "quote": "That was exactly what I meant to do!", "relationship": "Milo loves his experiments. Nico would prefer a little order."},
-  {"id": "nico", "name": "Nico", "role": "The Kitchen Diplomat", "bio": "Calm, refined and impossibly organized. Nico protects the restaurant’s reputation with perfect manners, even while dinner falls apart.", "quote": "We can resolve this with dignity.", "relationship": "His careful planning collides with Simba’s improvisation."},
-  {"id": "milo", "name": "Milo", "role": "The Curious Taster", "bio": "Sweet, curious and always hungry. Milo discovers clues by accident—provided he has not already eaten them.", "quote": "I was just checking…", "relationship": "He adores Simba’s experiments and notices things Luna misses."}
+  {
+   "id": "luna",
+   "name": "Luna",
+   "role": "The Taste Detective",
+   "bio": "Clever, elegant and endlessly curious. Luna can spot an ingredient by its scent, but a mystery can distract her from her own cooking.",
+   "quote": "Interesting… very suspicious.",
+   "relationship": "She suspects Milo, yet quietly relies on his observations.",
+   "traits": [
+    "Clever",
+    "Elegant",
+    "Curious",
+    "Persuasive"
+   ],
+   "flaw": "Investigates everything and sometimes forgets to finish her own cooking.",
+   "comedy": "Sees conspiracies in ordinary kitchen events and is often right for the wrong reason."
+  },
+  {
+   "id": "simba",
+   "name": "Simba",
+   "role": "The Chaos Chef",
+   "bio": "Bold, dramatic and inventive. Simba wants to become a culinary legend; following the recipe is where things get complicated.",
+   "quote": "That was exactly what I meant to do!",
+   "relationship": "Milo loves his experiments. Nico would prefer a little order.",
+   "traits": [
+    "Bold",
+    "Impulsive",
+    "Dramatic",
+    "Creative"
+   ],
+   "flaw": "Refuses to admit mistakes and improvises when he should follow the recipe.",
+   "comedy": "Turns small cooking problems into spectacular disasters, then claims it was intentional."
+  },
+  {
+   "id": "nico",
+   "name": "Nico",
+   "role": "The Kitchen Diplomat",
+   "bio": "Calm, refined and impossibly organized. Nico protects the restaurant’s reputation with perfect manners, even while dinner falls apart.",
+   "quote": "We can resolve this with dignity.",
+   "relationship": "His careful planning collides with Simba’s improvisation.",
+   "traits": [
+    "Refined",
+    "Calm",
+    "Polite",
+    "Organized"
+   ],
+   "flaw": "Tries to solve chaos with manners and cannot tolerate disorder.",
+   "comedy": "Remains formal while everything around him falls apart."
+  },
+  {
+   "id": "milo",
+   "name": "Milo",
+   "role": "The Curious Taster",
+   "bio": "Sweet, curious and always hungry. Milo discovers clues by accident—provided he has not already eaten them.",
+   "quote": "I was just checking…",
+   "relationship": "He adores Simba’s experiments and notices things Luna misses.",
+   "traits": [
+    "Sweet",
+    "Curious",
+    "Innocent-seeming",
+    "Food-motivated"
+   ],
+   "flaw": "Eats ingredients and evidence before anyone can inspect them.",
+   "comedy": "Looks harmless, causes major problems by accident, and sometimes discovers the key clue."
+  }
  ],
  "collections": [
-  {"id": "cat-chef-club", "name": "Cat Chef Club", "text": "Simba’s big ideas meet Luna’s curiosity. Follow the story, then cook the dish.", "recipes": ["creamy-tomato-dreams", "garden-pesto-twirls", "slow-sunday-pancakes"]},
-  {"id": "healthy-cat-kitchen", "name": "Healthy Cat Kitchen", "text": "Simple, balanced inspiration with clear ingredients and no miracle claims.", "recipes": ["lemon-pea-risotto", "roasted-tomato-soup", "crispy-chickpea-bowls"]},
-  {"id": "budget-cat", "name": "Budget Cat", "text": "Everyday ingredients, practical recipes and less waste. No invented price promises.", "recipes": ["slow-sunday-pancakes", "roasted-tomato-soup", "sweet-potato-black-bean-chili"]},
-  {"id": "naughty-cat-cafe", "name": "Naughty Cat Café", "text": "Nico tries to run a perfect shift. Milo keeps checking the pastries.", "recipes": ["slow-sunday-pancakes", "spinach-ricotta-bake", "apple-oat-crumble"]},
-  {"id": "passport-of-flavors", "name": "Passport of Flavors", "text": "Explore dishes and flavours with the whole kitchen crew.", "recipes": ["garden-pesto-twirls", "lemon-pea-risotto", "sweet-potato-black-bean-chili"]},
-  {"id": "weekly-cat-kitchen", "name": "Weekly Cat Kitchen", "text": "Choose a few meals for the week and turn the ingredients into a useful shopping list.", "recipes": ["roasted-tomato-soup", "spinach-ricotta-bake", "sweet-potato-black-bean-chili"]},
-  {"id": "purr-and-presence", "name": "Purr & Presence Kitchen", "text": "Slow moments, comforting recipes and the pleasure of cooking.", "recipes": ["lemon-pea-risotto", "mushroom-bruschetta", "apple-oat-crumble"]},
-  {"id": "cook-play-share", "name": "Cook, Play & Share", "text": "Recipes to try together. Audience challenges and community submissions are planned for a later release.", "recipes": ["creamy-tomato-dreams", "slow-sunday-pancakes", "mushroom-bruschetta"]}
+  {
+   "id": "cat-chef-club",
+   "name": "Cat Chef Club",
+   "text": "Simba’s big ideas meet Luna’s curiosity. Follow the story, then cook the dish.",
+   "recipes": [
+    "creamy-tomato-dreams",
+    "garden-pesto-twirls",
+    "slow-sunday-pancakes"
+   ],
+   "characters": [
+    "simba",
+    "luna"
+   ]
+  },
+  {
+   "id": "healthy-cat-kitchen",
+   "name": "Healthy Cat Kitchen",
+   "text": "Simple, balanced inspiration with clear ingredients and no miracle claims.",
+   "recipes": [
+    "lemon-pea-risotto",
+    "roasted-tomato-soup",
+    "crispy-chickpea-bowls"
+   ],
+   "characters": []
+  },
+  {
+   "id": "budget-cat",
+   "name": "Budget Cat",
+   "text": "Everyday ingredients, practical recipes and less waste. No invented price promises.",
+   "recipes": [
+    "slow-sunday-pancakes",
+    "roasted-tomato-soup",
+    "sweet-potato-black-bean-chili"
+   ],
+   "characters": []
+  },
+  {
+   "id": "naughty-cat-cafe",
+   "name": "Naughty Cat Café",
+   "text": "Nico tries to run a perfect shift. Milo keeps checking the pastries.",
+   "recipes": [
+    "slow-sunday-pancakes",
+    "spinach-ricotta-bake",
+    "apple-oat-crumble"
+   ],
+   "characters": [
+    "nico",
+    "milo"
+   ]
+  },
+  {
+   "id": "passport-of-flavors",
+   "name": "Passport of Flavors",
+   "text": "Explore dishes and flavours with the whole kitchen crew.",
+   "recipes": [
+    "garden-pesto-twirls",
+    "lemon-pea-risotto",
+    "sweet-potato-black-bean-chili"
+   ],
+   "characters": []
+  },
+  {
+   "id": "weekly-cat-kitchen",
+   "name": "Weekly Cat Kitchen",
+   "text": "Choose a few meals for the week and turn the ingredients into a useful shopping list.",
+   "recipes": [
+    "roasted-tomato-soup",
+    "spinach-ricotta-bake",
+    "sweet-potato-black-bean-chili"
+   ],
+   "characters": []
+  },
+  {
+   "id": "purr-and-presence",
+   "name": "Purr & Presence Kitchen",
+   "text": "Slow moments, comforting recipes and the pleasure of cooking.",
+   "recipes": [
+    "lemon-pea-risotto",
+    "mushroom-bruschetta",
+    "apple-oat-crumble"
+   ],
+   "characters": []
+  },
+  {
+   "id": "cook-play-share",
+   "name": "Cook, Play & Share",
+   "text": "Recipes to try together. Audience challenges and community submissions are planned for a later release.",
+   "recipes": [
+    "creamy-tomato-dreams",
+    "slow-sunday-pancakes",
+    "mushroom-bruschetta"
+   ],
+   "characters": []
+  }
  ],
  "season": {
   "eyebrow": "SEASON ONE · STORY OUTLINES",
@@ -43,15 +189,146 @@
   "status": "Video production has not started for this episode."
  },
  "episodes": [
-  {"n": 1, "title": "The Worst Chef in the World", "text": "Simba promises the city's best dinner. A sequence of kitchen mishaps sends a dish to the most feared food critic. The critic asks for another serving, for a reason no one understands. The incident reveals the first clue connected to the missing book.", "recipe": "creamy-tomato-dreams"},
-  {"n": 2, "title": "The Croissant Criminal", "text": "Croissants disappear from the bakery. Luna investigates and finds crumbs on Milo. The crumbs lead to a hidden room and an unexpected symbol.", "recipe": "garden-pesto-twirls"},
-  {"n": 3, "title": "Michelin Star Disaster", "text": "Nico hosts a high-stakes dinner. Simba changes the menu at the last minute. A guest's allergy forces the team to stop, communicate clearly, and prepare a safe alternative; the clue comes from the original menu notes, not from risking anyone's safety.", "recipe": "slow-sunday-pancakes"},
-  {"n": 4, "title": "The 60-Second Cooking War", "text": "The four compete in a timed cooking challenge. Milo wins by accident and receives a box containing the first clear clue.", "recipe": "lemon-pea-risotto"},
-  {"n": 5, "title": "The Midnight Kitchen", "text": "The team sneaks into a closed restaurant to investigate a legendary recipe. Their rival is already there, cooking the same dish.", "recipe": "roasted-tomato-soup"},
-  {"n": 6, "title": "The Market of Impossible Ingredients", "text": "The team searches a night market for an unusual ingredient. Simba trades away something valuable for the wrong item. The item contains a hidden message.", "recipe": "mushroom-bruschetta"},
-  {"n": 7, "title": "My Ex Is a Famous Chef", "text": "Nico's old culinary rival returns. He insists he is unaffected and begins obsessively arranging cutlery. The rival knows where a missing page may be.", "recipe": "crispy-chickpea-bowls"},
-  {"n": 8, "title": "The Great Flour Explosion", "text": "A misunderstanding causes a flour cloud to cover the kitchen. Cleaning up reveals a symbol hidden on the wall.", "recipe": "spinach-ricotta-bake"},
-  {"n": 9, "title": "The Secret Recipe", "text": "The team finds an incomplete recipe and argues over its meaning. Luna recognizes the code, but the solution changes how the team understands the missing book.", "recipe": "sweet-potato-black-bean-chili"},
-  {"n": 10, "title": "The Restaurant That Changed Everything", "text": "The team opens a restaurant around their first recovered recipe. An anonymous letter arrives: “If you found the first page, you still don't know who stole the book.”", "recipe": "apple-oat-crumble"}
- ]
+  {
+   "n": 1,
+   "title": "The Worst Chef in the World",
+   "text": "Simba promises the city's best dinner. A sequence of kitchen mishaps sends a dish to the most feared food critic. The critic asks for another serving, for a reason no one understands. The incident reveals the first clue connected to the missing book.",
+   "recipe": "creamy-tomato-dreams",
+   "characters": [
+    "simba",
+    "nico",
+    "luna",
+    "milo"
+   ],
+   "status": "outline",
+   "slug": "episode-1"
+  },
+  {
+   "n": 2,
+   "title": "The Croissant Criminal",
+   "text": "Croissants disappear from the bakery. Luna investigates and finds crumbs on Milo. The crumbs lead to a hidden room and an unexpected symbol.",
+   "recipe": "garden-pesto-twirls",
+   "characters": [
+    "luna",
+    "milo"
+   ],
+   "status": "outline",
+   "slug": "episode-2"
+  },
+  {
+   "n": 3,
+   "title": "Michelin Star Disaster",
+   "text": "Nico hosts a high-stakes dinner. Simba changes the menu at the last minute. A guest's allergy forces the team to stop, communicate clearly, and prepare a safe alternative; the clue comes from the original menu notes, not from risking anyone's safety.",
+   "recipe": "slow-sunday-pancakes",
+   "characters": [
+    "nico",
+    "simba"
+   ],
+   "status": "outline",
+   "slug": "episode-3"
+  },
+  {
+   "n": 4,
+   "title": "The 60-Second Cooking War",
+   "text": "The four compete in a timed cooking challenge. Milo wins by accident and receives a box containing the first clear clue.",
+   "recipe": "lemon-pea-risotto",
+   "characters": [
+    "milo",
+    "luna",
+    "simba",
+    "nico"
+   ],
+   "status": "outline",
+   "slug": "episode-4"
+  },
+  {
+   "n": 5,
+   "title": "The Midnight Kitchen",
+   "text": "The team sneaks into a closed restaurant to investigate a legendary recipe. Their rival is already there, cooking the same dish.",
+   "recipe": "roasted-tomato-soup",
+   "characters": [
+    "luna",
+    "simba",
+    "nico",
+    "milo"
+   ],
+   "status": "outline",
+   "slug": "episode-5"
+  },
+  {
+   "n": 6,
+   "title": "The Market of Impossible Ingredients",
+   "text": "The team searches a night market for an unusual ingredient. Simba trades away something valuable for the wrong item. The item contains a hidden message.",
+   "recipe": "mushroom-bruschetta",
+   "characters": [
+    "simba",
+    "luna",
+    "milo"
+   ],
+   "status": "outline",
+   "slug": "episode-6"
+  },
+  {
+   "n": 7,
+   "title": "My Ex Is a Famous Chef",
+   "text": "Nico's old culinary rival returns. He insists he is unaffected and begins obsessively arranging cutlery. The rival knows where a missing page may be.",
+   "recipe": "crispy-chickpea-bowls",
+   "characters": [
+    "nico"
+   ],
+   "status": "outline",
+   "slug": "episode-7"
+  },
+  {
+   "n": 8,
+   "title": "The Great Flour Explosion",
+   "text": "A misunderstanding causes a flour cloud to cover the kitchen. Cleaning up reveals a symbol hidden on the wall.",
+   "recipe": "spinach-ricotta-bake",
+   "characters": [
+    "simba",
+    "milo",
+    "nico",
+    "luna"
+   ],
+   "status": "outline",
+   "slug": "episode-8"
+  },
+  {
+   "n": 9,
+   "title": "The Secret Recipe",
+   "text": "The team finds an incomplete recipe and argues over its meaning. Luna recognizes the code, but the solution changes how the team understands the missing book.",
+   "recipe": "sweet-potato-black-bean-chili",
+   "characters": [
+    "luna",
+    "simba",
+    "nico",
+    "milo"
+   ],
+   "status": "outline",
+   "slug": "episode-9"
+  },
+  {
+   "n": 10,
+   "title": "The Restaurant That Changed Everything",
+   "text": "The team opens a restaurant around their first recovered recipe. An anonymous letter arrives: “If you found the first page, you still don't know who stole the book.”",
+   "recipe": "apple-oat-crumble",
+   "characters": [
+    "luna",
+    "simba",
+    "nico",
+    "milo"
+   ],
+   "status": "outline",
+   "slug": "episode-10"
+  }
+ ],
+ "community": {
+  "title": "Cook, Play & Share",
+  "text": "Polls on the next dish, kitchen challenges and a place to share what you cooked are planned for a later release. They will open once reporting, moderation and privacy controls are ready, so nothing here is live yet."
+ },
+ "notes": {
+  "sample": "Editorial sample recipe",
+  "allergy": "Allergen notes come from the ingredient list. If you have a serious allergy, always check ingredient labels and cross-contamination risks.",
+  "cats": "These recipes are for people. Luna, Simba, Nico and Milo are fictional; please do not feed human recipes to real cats."
+ }
 }

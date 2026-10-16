@@ -44,26 +44,47 @@ test('kitchen data belongs to one person only', async () => {
   const a = (await auth.register({email: 'a@example.com', password: 'longenough'})).user;
   const b = (await auth.register({email: 'b@example.com', password: 'longenough'})).user;
   await kitchen.setFavorite(a.id, 'lemon-pea-risotto', true);
-  await kitchen.addToPlan(a.id, {date: '2099-01-02', recipeId: 'roasted-tomato-soup', servings: 4});
-  await kitchen.addToPlan(a.id, {date: '2099-01-03', recipeId: 'creamy-tomato-dreams', servings: 4});
-  const mine = await kitchen.summary(a.id);
+  await kitchen.addToPlan(a.id, {date: '2099-01-02', slot: 'dinner', recipeId: 'roasted-tomato-soup', servings: 4});
+  const mine = await kitchen.addToPlan(a.id, {date: '2099-01-02', slot: 'lunch', recipeId: 'creamy-tomato-dreams', servings: 4});
   assert.deepEqual(mine.favorites, ['lemon-pea-risotto']);
-  assert.equal(mine.plan.length, 2);
-  assert.ok(mine.shopping.some(i => i.label === '800 g canned chopped tomatoes'), mine.shopping.map(i => i.label).join(' / '));
-  const theirs = await kitchen.summary(b.id);
-  assert.deepEqual(theirs, {favorites: [], plan: [], shopping: []});
+  assert.deepEqual(mine.plan.map(p => p.slot), ['lunch', 'dinner'], 'slots are ordered through the day');
+  const theirs = await kitchen.read(b.id);
+  assert.deepEqual(theirs, {favorites: [], plan: [], listed: [], marks: {}, preferences: {}});
   await kitchen.removeFromPlan(b.id, mine.plan[0].id);
-  assert.equal((await kitchen.summary(a.id)).plan.length, 2, 'another person cannot remove my plan');
+  assert.equal((await kitchen.read(a.id)).plan.length, 2, 'another person cannot remove my plan');
+  await assert.rejects(kitchen.addToPlan(a.id, {date: '2099-01-02', slot: 'brunch', recipeId: 'creamy-tomato-dreams'}));
 });
 
-test('shopping list ticks and removals', async () => {
+test('list recipes, ticks, clear completed and validation', async () => {
   const c = (await auth.register({email: 'c@example.com', password: 'longenough'})).user;
-  await kitchen.addToPlan(c.id, {date: '2099-02-01', recipeId: 'garden-pesto-twirls'});
-  const [first] = (await kitchen.summary(c.id)).shopping;
-  await kitchen.markShopping(c.id, first.key, 'checked');
-  assert.equal((await kitchen.summary(c.id)).shopping.find(i => i.key === first.key).checked, true);
-  await kitchen.markShopping(c.id, first.key, 'removed');
-  assert.ok(!(await kitchen.summary(c.id)).shopping.some(i => i.key === first.key));
+  let k = await kitchen.addToList(c.id, {recipeId: 'garden-pesto-twirls', servings: 4});
+  assert.deepEqual(k.listed, [{recipeId: 'garden-pesto-twirls', servings: 4}]);
+  k = await kitchen.markShopping(c.id, 'fusilli|g', 'checked');
+  assert.equal(k.marks['fusilli|g'], 'checked');
+  k = await kitchen.clearChecked(c.id);
+  assert.equal(k.marks['fusilli|g'], 'removed');
+  k = await kitchen.resetList(c.id);
+  assert.deepEqual(k.listed, []);
+  assert.deepEqual(k.marks, {});
   await assert.rejects(kitchen.addToPlan(c.id, {date: 'not-a-date', recipeId: 'garden-pesto-twirls'}));
-  await assert.rejects(kitchen.addToPlan(c.id, {date: '2099-02-01', recipeId: 'garden-pesto-twirls', servings: 99}));
+  await assert.rejects(kitchen.addToList(c.id, {recipeId: 'garden-pesto-twirls', servings: 99}));
+  await assert.rejects(kitchen.setPreferences(c.id, {maxMinutes: 7}));
+  assert.deepEqual((await kitchen.setPreferences(c.id, {maxMinutes: 30, meatFree: true})).preferences, {maxMinutes: 30, meatFree: true});
+});
+
+test('a visitor kitchen merges into an account without losing anything', async () => {
+  const d = (await auth.register({email: 'd@example.com', password: 'longenough'})).user;
+  await kitchen.setFavorite(d.id, 'apple-oat-crumble', true);
+  const k = await kitchen.merge(d.id, {
+    favorites: ['apple-oat-crumble', 'mushroom-bruschetta', 'not-a-recipe'],
+    plan: [{date: '2099-03-01', slot: 'breakfast', recipeId: 'slow-sunday-pancakes', servings: 2}],
+    listed: [{recipeId: 'roasted-tomato-soup', servings: 4}],
+    marks: {'note:pinch of salt': 'checked'},
+    preferences: {difficulty: 'Easy'},
+  });
+  assert.deepEqual(k.favorites.sort(), ['apple-oat-crumble', 'mushroom-bruschetta']);
+  assert.equal(k.plan.length, 1);
+  assert.equal(k.listed.length, 1);
+  assert.equal(k.marks['note:pinch of salt'], 'checked');
+  assert.deepEqual(k.preferences, {difficulty: 'Easy'});
 });

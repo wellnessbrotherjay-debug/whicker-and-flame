@@ -86,7 +86,7 @@ async function api(req, res, path) {
   if (route === 'GET /api/catalog') return json(res, 200, {recipes, site, episodes: await store.episodes()});
   if (route === 'GET /api/me') {
     if (!user) return json(res, 200, {user: null});
-    return json(res, 200, {user: {...user, isAdmin: admins.has(user.email)}, ...(await kitchen.summary(user.id))});
+    return json(res, 200, {user: {...user, isAdmin: admins.has(user.email)}, kitchen: await kitchen.read(user.id)});
   }
   if (route === 'POST /api/register' || route === 'POST /api/signin') {
     limit(req);
@@ -97,23 +97,26 @@ async function api(req, res, path) {
     await auth.signOut(token);
     return json(res, 200, {ok: true}, {'Set-Cookie': sessionCookie('', 0)});
   }
-  if (route === 'POST /api/favorites') {
-    const b = await body(req);
-    await kitchen.setFavorite(signedIn().id, b.recipeId, b.saved === true);
-    return json(res, 200, await kitchen.summary(user.id));
-  }
-  if (route === 'POST /api/plan') {
-    await kitchen.addToPlan(signedIn().id, await body(req));
-    return json(res, 200, await kitchen.summary(user.id));
+
+  // Each change answers with the whole kitchen as it now stands.
+  const kitchenRoutes = {
+    'POST /api/kitchen/merge': b => kitchen.merge(user.id, b),
+    'POST /api/favorites': b => kitchen.setFavorite(user.id, b.recipeId, b.saved === true),
+    'POST /api/plan': b => kitchen.addToPlan(user.id, b),
+    'POST /api/list': b => kitchen.addToList(user.id, b),
+    'POST /api/list/remove': b => kitchen.removeFromList(user.id, b.recipeId),
+    'POST /api/shopping': b => kitchen.markShopping(user.id, b.key, b.state),
+    'POST /api/shopping/clear-checked': () => kitchen.clearChecked(user.id),
+    'POST /api/shopping/reset': () => kitchen.resetList(user.id),
+    'POST /api/preferences': b => kitchen.setPreferences(user.id, b),
+  };
+  if (kitchenRoutes[route]) {
+    signedIn();
+    return json(res, 200, {kitchen: await kitchenRoutes[route](await body(req))});
   }
   if (req.method === 'DELETE' && /^\/api\/plan\/\d+$/.test(path)) {
-    await kitchen.removeFromPlan(signedIn().id, path.split('/')[3]);
-    return json(res, 200, await kitchen.summary(user.id));
-  }
-  if (route === 'POST /api/shopping') {
-    const b = await body(req);
-    await kitchen.markShopping(signedIn().id, b.key, b.state);
-    return json(res, 200, await kitchen.summary(user.id));
+    signedIn();
+    return json(res, 200, {kitchen: await kitchen.removeFromPlan(user.id, path.split('/')[3])});
   }
 
   if (route === 'GET /api/status') return json(res, 200, {workflowConfigured: !!process.env.WF_WORKFLOW_TOKEN, videoGeneration: 'not_connected', instagram: 'not_connected'});

@@ -2,9 +2,8 @@
  {
   "id": "creamy-tomato-dreams",
   "title": "Creamy Tomato Dreams",
-  "description": "",
+  "description": "A silky tomato sauce softened with cream, tossed through pasta with Parmesan and torn basil.",
   "servings": 2,
-  "minutes": 25,
   "image": "/assets/tomato-pasta.png",
   "ingredients": [
    "180 g dried pasta",
@@ -24,14 +23,21 @@
    "Lower the heat and stir in the cream. Add pasta and 30 ml reserved water; toss for 1 minute, adding more water a tablespoon at a time if needed.",
    "Remove from heat. Stir in Parmesan and torn basil, season with pepper and serve immediately."
   ],
-  "allergens": "wheat, milk. Check ingredient labels."
+  "allergens": "wheat, milk. Check ingredient labels.",
+  "categories": [
+   "Quick meals",
+   "Comfort food"
+  ],
+  "difficulty": "Easy",
+  "editorialStatus": "sample",
+  "totalMinutes": 25,
+  "meatFree": true
  },
  {
   "id": "garden-pesto-twirls",
   "title": "Garden Pesto Twirls",
-  "description": "",
+  "description": "Fresh basil pesto with toasted pine nuts, loosened with pasta water so it clings to every twist.",
   "servings": 2,
-  "minutes": 20,
   "image": "/assets/pesto.jpg",
   "ingredients": [
    "180 g fusilli",
@@ -50,14 +56,21 @@
    "Pulse basil, pine nuts, Parmesan, peeled garlic, oil, lemon juice and 1/4 tsp salt in a food processor until a coarse paste forms.",
    "Off the heat, toss pasta with pesto and 30 ml cooking water. Add more water as needed for a glossy coating. Taste for pepper and serve."
   ],
-  "allergens": "wheat, milk, pine nuts. Check ingredient labels."
+  "allergens": "wheat, milk, pine nuts. Check ingredient labels.",
+  "categories": [
+   "Quick meals",
+   "Few ingredients"
+  ],
+  "difficulty": "Easy",
+  "editorialStatus": "sample",
+  "totalMinutes": 20,
+  "meatFree": true
  },
  {
   "id": "slow-sunday-pancakes",
   "title": "Slow Sunday Pancakes",
-  "description": "",
+  "description": "A small stack of fluffy pancakes with berries and maple syrup, for mornings with nowhere to be.",
   "servings": 2,
-  "minutes": 25,
   "image": "/assets/pancakes.jpg",
   "ingredients": [
    "120 g plain flour",
@@ -78,14 +91,21 @@
    "Cook for 2–3 minutes until bubbles appear and edges begin to set. Flip and cook for another 1–2 minutes, until golden with no wet batter in the centre. Reduce heat if browning too quickly; repeat with remaining batter.",
    "Serve with berries and maple syrup."
   ],
-  "allergens": "wheat, milk, egg. Check ingredient labels."
+  "allergens": "wheat, milk, egg. Check ingredient labels.",
+  "categories": [
+   "Breakfast",
+   "Desserts & baking"
+  ],
+  "difficulty": "Easy",
+  "editorialStatus": "sample",
+  "totalMinutes": 25,
+  "meatFree": true
  },
  {
   "id": "lemon-pea-risotto",
   "title": "Lemon & Pea Risotto",
-  "description": "",
+  "description": "Creamy risotto stirred slowly with warm stock, brightened with lemon and sweet peas.",
   "servings": 2,
-  "minutes": 35,
   "image": null,
   "ingredients": [
    "160 g arborio rice",
@@ -106,14 +126,21 @@
    "Stir peas into the rice for the last 4 minutes of cooking. The finished risotto should spread gently when spooned onto a plate, so add a splash of liquid if stiff.",
    "Take off heat. Stir in butter, Parmesan, lemon zest and juice. Rest for 2 minutes, taste for seasoning and serve."
   ],
-  "allergens": "milk, check stock label. Check ingredient labels."
+  "allergens": "milk, check stock label. Check ingredient labels.",
+  "categories": [
+   "Comfort food",
+   "Healthy inspiration"
+  ],
+  "difficulty": "Medium",
+  "editorialStatus": "sample",
+  "totalMinutes": 35,
+  "meatFree": true
  },
  {
   "id": "roasted-tomato-soup",
   "title": "Roasted Tomato & White Bean Soup",
-  "description": "",
+  "description": "Oven-roasted tomatoes, onion and garlic blended with white beans into a thick, warming soup.",
   "servings": 4,
-  "minutes": 50,
   "image": null,
   "ingredients": [
    "800 g ripe tomatoes, quartered",
@@ -132,14 +159,21 @@
    "Scrape vegetables and all tray juices into a saucepan. Add beans and stock; bring to a boil, then simmer for 10 minutes.",
    "Add basil and blend with a stick blender, keeping its head submerged to avoid splashes. Add a little water if too thick. Taste and serve hot."
   ],
-  "allergens": "check stock label. Check ingredient labels."
+  "allergens": "check stock label. Check ingredient labels.",
+  "categories": [
+   "Healthy inspiration",
+   "Budget-friendly"
+  ],
+  "difficulty": "Easy",
+  "editorialStatus": "sample",
+  "totalMinutes": 50,
+  "meatFree": true
  },
  {
   "id": "mushroom-bruschetta",
   "title": "Garlic Mushroom Bruschetta",
-  "description": "",
+  "description": "Browned garlicky mushrooms with thyme and parsley, piled onto crisp sourdough toast.",
   "servings": 2,
-  "minutes": 20,
   "image": null,
   "ingredients": [
    "250 g mushrooms, sliced",
@@ -160,14 +194,20 @@
    "Reduce heat to medium-low. Add butter, garlic, thyme and salt; stir for 1 minute until fragrant. Add parsley, lemon juice and pepper.",
    "Spoon mushrooms and pan juices over toast and serve straight away."
   ],
-  "allergens": "wheat, milk. Check ingredient labels."
+  "allergens": "wheat, milk. Check ingredient labels.",
+  "categories": [
+   "Quick meals"
+  ],
+  "difficulty": "Easy",
+  "editorialStatus": "sample",
+  "totalMinutes": 20,
+  "meatFree": true
  },
  {
   "id": "crispy-chickpea-bowls",
   "title": "Crispy Chickpea & Couscous Bowls",
-  "description": "",
+  "description": "Spiced roasted chickpeas over couscous with cucumber, tomatoes and a lemon yogurt dressing.",
   "servings": 2,
-  "minutes": 35,
   "image": null,
   "ingredients": [
    "400 g can chickpeas, drained, rinsed and dried well",
@@ -190,14 +230,21 @@
    "Mix yogurt with lemon juice. Divide couscous, cucumber and tomatoes between bowls.",
    "Top with hot chickpeas, yogurt dressing and parsley. Serve immediately for the best crunch."
   ],
-  "allergens": "wheat, milk. Check ingredient labels."
+  "allergens": "wheat, milk. Check ingredient labels.",
+  "categories": [
+   "Healthy inspiration",
+   "International"
+  ],
+  "difficulty": "Easy",
+  "editorialStatus": "sample",
+  "totalMinutes": 35,
+  "meatFree": true
  },
  {
   "id": "spinach-ricotta-bake",
   "title": "Spinach & Ricotta Pasta Bake",
-  "description": "",
+  "description": "Penne baked in tomato sauce with spinach and ricotta under a golden mozzarella top.",
   "servings": 4,
-  "minutes": 50,
   "image": null,
   "ingredients": [
    "250 g penne",
@@ -219,14 +266,20 @@
    "Transfer to an approximately 2-litre baking dish. Sprinkle with mozzarella and Parmesan.",
    "Bake for 20–25 minutes, until bubbling throughout and golden on top. Stand for 5 minutes before serving."
   ],
-  "allergens": "wheat, milk. Check ingredient labels."
+  "allergens": "wheat, milk. Check ingredient labels.",
+  "categories": [
+   "Comfort food"
+  ],
+  "difficulty": "Medium",
+  "editorialStatus": "sample",
+  "totalMinutes": 50,
+  "meatFree": true
  },
  {
   "id": "sweet-potato-black-bean-chili",
   "title": "Sweet Potato & Black Bean Chili",
-  "description": "",
+  "description": "A smoky, gently spiced chili of sweet potato and black beans, finished with lime and coriander.",
   "servings": 4,
-  "minutes": 45,
   "image": null,
   "ingredients": [
    "15 ml olive oil",
@@ -251,14 +304,21 @@
    "Add drained beans. Simmer uncovered for 10 minutes, until sweet potato is easily pierced with a fork and sauce has thickened. Add a splash of water if it catches before the potato is tender.",
    "Stir in lime juice, taste for salt and pepper, and scatter over coriander. Serve in bowls."
   ],
-  "allergens": "check stock and spice labels. Check ingredient labels."
+  "allergens": "check stock and spice labels. Check ingredient labels.",
+  "categories": [
+   "International",
+   "Budget-friendly"
+  ],
+  "difficulty": "Easy",
+  "editorialStatus": "sample",
+  "totalMinutes": 45,
+  "meatFree": true
  },
  {
   "id": "apple-oat-crumble",
   "title": "Warm Apple & Oat Crumble",
-  "description": "",
+  "description": "Cinnamon apples under a buttery oat crumble, baked until the juices bubble at the edges.",
   "servings": 4,
-  "minutes": 55,
   "image": null,
   "ingredients": [
    "600 g apples, peeled, cored and cut into 1 cm pieces",
@@ -279,6 +339,14 @@
    "Bake for 35–40 minutes, until topping is golden, fruit juices bubble at the edges and apple pieces feel tender when pierced. If topping browns before fruit softens, cover loosely with foil.",
    "Let stand for 10 minutes before serving; the fruit will be very hot."
   ],
-  "allergens": "wheat, oats, milk. Check ingredient labels."
+  "allergens": "wheat, oats, milk. Check ingredient labels.",
+  "categories": [
+   "Desserts & baking",
+   "Comfort food"
+  ],
+  "difficulty": "Easy",
+  "editorialStatus": "sample",
+  "totalMinutes": 55,
+  "meatFree": true
  }
 ]
