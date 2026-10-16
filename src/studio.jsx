@@ -179,7 +179,8 @@ export function Studio({hash}) {
   </section>;
 }
 
-const NEXT_LABEL = {script: 'Back to script', idea: 'Back to idea', production: 'Into production', review: 'Send for review', approved: 'Approve', scheduled: 'Schedule'};
+const FORWARD = {script: 'Start the script', production: 'Into production', review: 'Send for review', approved: 'Approve', scheduled: 'Schedule'};
+const moveLabel = (from, to) => STATUSES.indexOf(to) > STATUSES.indexOf(from) ? FORWARD[to] : 'Back to ' + STATUS_LABELS[to].toLowerCase();
 
 export function PostEditor({id, search}) {
   const {user, site, recipes} = useApp();
@@ -201,7 +202,7 @@ export function PostEditor({id, search}) {
   const scenePrompt = useMemo(() => {
     if (!brand || !form) return '';
     const looks = form.characters.map(c => `${site.characters.find(x => x.id === c)?.name}: ${brand.characters[c]?.look}`).join(' ');
-    return brand.prompts.scene.replace('{style}', brand.style.look).replace('{characterLooks}', looks || 'none')
+    return brand.prompts.scene.replace('{style}', brand.style.look.replace(/\.$/, '')).replace('{characterLooks}', looks || 'none')
       .replace('{scene}', [form.hook, form.notes].filter(Boolean).join(' '));
   }, [brand, form]);
   if (!user?.isAdmin) return <Studio/>;
@@ -279,7 +280,7 @@ export function PostEditor({id, search}) {
       <button type="button" className="btn" onClick={save}>Save</button>
       {!isNew && moves.length > 0 && <label className="sr-only" htmlFor="note">Note</label>}
       {!isNew && moves.length > 0 && <input id="note" className="note-input" placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)}/>}
-      {!isNew && moves.map(s => <button key={s} type="button" className="btn ghost" onClick={() => move(s)}>{NEXT_LABEL[s] || STATUS_LABELS[s]}</button>)}
+      {!isNew && moves.map(s => <button key={s} type="button" className="btn ghost" onClick={() => move(s)}>{moveLabel(post.status, s)}</button>)}
       {!isNew && <button type="button" className="icon" aria-label="Delete post" onClick={remove}><Trash2 size={18}/></button>}
     </div>}
     {post.status === 'scheduled' && <p className="micro">Scheduled. The n8n publisher posts it at {form.time} on {form.date} once the platform accounts are connected.</p>}
