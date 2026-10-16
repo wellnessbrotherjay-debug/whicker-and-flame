@@ -11,13 +11,13 @@
   "title": "Welcome to the kitchen.",
   "text": "Our first taste of the kitchen. Press play and turn up the sound. Meet the new story cast below.",
   "src": "/videos/whisker-flame-intro-web.mp4",
-  "poster": "/assets/whisker-heat-cast-v1.png"
+  "poster": "/assets/whisker-heat-cast-v1.jpg"
  },
  "cast": {
   "eyebrow": "FOUR PERSONALITIES. ONE SHARED KITCHEN.",
   "title": "Meet the troublemakers.",
   "text": "Luna, Simba, Nico and Milo are on the trail of a lost recipe book. Their stories are fictional. The recipes are for your real kitchen.",
-  "image": "/assets/whisker-heat-cast-v1.png"
+  "image": "/assets/whisker-heat-cast-v1.jpg"
  },
  "characters": [
   {

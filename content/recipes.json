@@ -4,7 +4,7 @@
   "title": "Creamy Tomato Dreams",
   "description": "A silky tomato sauce softened with cream, tossed through pasta with Parmesan and torn basil.",
   "servings": 2,
-  "image": "/assets/tomato-pasta.png",
+  "image": "/assets/tomato-pasta.jpg",
   "ingredients": [
    "180 g dried pasta",
    "15 ml olive oil",
@@ -38,7 +38,7 @@
   "title": "Garden Pesto Twirls",
   "description": "Fresh basil pesto with toasted pine nuts, loosened with pasta water so it clings to every twist.",
   "servings": 2,
-  "image": "/assets/pesto.jpg",
+  "image": "/assets/garden-pesto-twirls.jpg",
   "ingredients": [
    "180 g fusilli",
    "30 g basil leaves",
@@ -106,7 +106,7 @@
   "title": "Lemon & Pea Risotto",
   "description": "Creamy risotto stirred slowly with warm stock, brightened with lemon and sweet peas.",
   "servings": 2,
-  "image": null,
+  "image": "/assets/lemon-pea-risotto.jpg",
   "ingredients": [
    "160 g arborio rice",
    "700 ml hot vegetable stock, plus a little hot water if needed",
@@ -141,7 +141,7 @@
   "title": "Roasted Tomato & White Bean Soup",
   "description": "Oven-roasted tomatoes, onion and garlic blended with white beans into a thick, warming soup.",
   "servings": 4,
-  "image": null,
+  "image": "/assets/roasted-tomato-soup.jpg",
   "ingredients": [
    "800 g ripe tomatoes, quartered",
    "1 onion, cut into wedges",
@@ -174,7 +174,7 @@
   "title": "Garlic Mushroom Bruschetta",
   "description": "Browned garlicky mushrooms with thyme and parsley, piled onto crisp sourdough toast.",
   "servings": 2,
-  "image": null,
+  "image": "/assets/mushroom-bruschetta.jpg",
   "ingredients": [
    "250 g mushrooms, sliced",
    "4 slices sourdough bread, about 160 g",
@@ -208,7 +208,7 @@
   "title": "Crispy Chickpea & Couscous Bowls",
   "description": "Spiced roasted chickpeas over couscous with cucumber, tomatoes and a lemon yogurt dressing.",
   "servings": 2,
-  "image": null,
+  "image": "/assets/crispy-chickpea-bowls.jpg",
   "ingredients": [
    "400 g can chickpeas, drained, rinsed and dried well",
    "15 ml olive oil",
@@ -245,7 +245,7 @@
   "title": "Spinach & Ricotta Pasta Bake",
   "description": "Penne baked in tomato sauce with spinach and ricotta under a golden mozzarella top.",
   "servings": 4,
-  "image": null,
+  "image": "/assets/spinach-ricotta-bake.jpg",
   "ingredients": [
    "250 g penne",
    "15 ml olive oil",
@@ -280,7 +280,7 @@
   "title": "Sweet Potato & Black Bean Chili",
   "description": "A smoky, gently spiced chili of sweet potato and black beans, finished with lime and coriander.",
   "servings": 4,
-  "image": null,
+  "image": "/assets/sweet-potato-black-bean-chili.jpg",
   "ingredients": [
    "15 ml olive oil",
    "1 onion, diced",
@@ -319,7 +319,7 @@
   "title": "Warm Apple & Oat Crumble",
   "description": "Cinnamon apples under a buttery oat crumble, baked until the juices bubble at the edges.",
   "servings": 4,
-  "image": null,
+  "image": "/assets/apple-oat-crumble.jpg",
   "ingredients": [
    "600 g apples, peeled, cored and cut into 1 cm pieces",
    "15 ml lemon juice",
