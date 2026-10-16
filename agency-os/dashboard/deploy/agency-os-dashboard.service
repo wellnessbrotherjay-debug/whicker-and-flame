@@ -1,0 +1,15 @@
+[Unit]
+Description=SignalIQ Agency OS Dashboard
+After=network.target
+[Service]
+User=n8n
+WorkingDirectory=/opt/agency-os-dashboard
+EnvironmentFile=/opt/n8n/agency-dashboard.env
+EnvironmentFile=/opt/n8n/agency-os.env
+ExecStart=/usr/bin/node --import tsx server/index.ts
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,3 @@
+export type Asset={position:number;kind:string;public_url:string};
+export type LeadMagnet={id:string;keyword:string;title:string;pdf_url:string|null;pdf_pages:number|null;funnel:{comments:number;pdfs_sent:number;pdfs_opened:number;scans_sent:number}|null};
+export type Post={id:string;hook:string;caption:string;hashtags:string[];status:string;format:string;scheduled_for:string|null;updated_at:string;published_at:string|null;approved_at:string|null;approval_code:number;permalink:string|null;error:string|null;post_assets:Asset[];content_pillars:{name:string}|null;metric_snapshots:{views:number|null;reach:number|null;likes:number|null;saves:number|null;captured_at:string}[];lead_magnet:LeadMagnet|null};

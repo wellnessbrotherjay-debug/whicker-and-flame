@@ -1,0 +1,7 @@
+{
+  "name": "agency-os-render",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node --import tsx render.ts" },
+  "dependencies": { "satori": "0.12.1", "@resvg/resvg-js": "2.6.2", "sharp": "0.33.5", "tsx": "4.19.2" }
+}

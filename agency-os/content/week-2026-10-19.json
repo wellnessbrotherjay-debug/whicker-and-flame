@@ -1,0 +1,99 @@
+{
+ "note": "Week one, written by Claude in the planner's exact format while the planner's OpenAI account has no credits. Load with: node agency-os/scripts/load-week.mjs agency-os/content/week-2026-10-19.json",
+ "posts": [
+  {
+   "pillar": "Cat Chef Club", "format": "carousel", "hook_type": "story", "is_experiment": false,
+   "hook": "Simba promised the best dinner in the city.",
+   "slides": [
+    {"title": "Episode 1: The Worst Chef", "body": "Simba promised the city's best dinner. Nico had already polished the cutlery. Twice.", "visual": {"kind": "character", "labels": ["simba", "nico"]}},
+    {"title": "Then the kitchen happened", "body": "A dropped pan, a flare of garlic and one very fast Milo. The plate went straight to the city's most feared critic.", "visual": {"kind": "character", "labels": ["milo", "luna"]}},
+    {"title": "The critic asked for more", "body": "Nobody understood why. Luna noticed something folded under the plate: the first clue to the missing recipe book.", "visual": {"kind": "character", "labels": ["luna"]}},
+    {"title": "The dish is real", "body": "Creamy Tomato Dreams. 25 minutes, serves 2, and you can cook it tonight.", "visual": {"kind": "photo", "labels": [], "url": "https://whiskerflame.safetykat.com/agency-os/food/tomato-pasta.jpg"}}
+   ],
+   "cta": "Who do you suspect? Recipe at the link in bio.", "cta_type": "comment",
+   "caption": "Episode 1 of The Lost Recipe Book.\n\nSimba promised the city's best dinner. What arrived at the critic's table was… memorable. And then the critic asked for another plate.\n\nLuna thinks it's a clue. Milo thinks it's dinner.\n\nThe dish from tonight's episode is real: Creamy Tomato Dreams, 25 minutes, serves 2. The full recipe is at the link in bio.\n\nWho do you suspect took the book? Tell us below.",
+   "hashtags": ["#WhiskerAndHeat", "#TheLostRecipeBook", "#CatChefs", "#PastaNight"],
+   "alt_text": "Simba the ginger cat chef and Nico the tuxedo cat in a warm kitchen, with the title Simba promised the best dinner in the city.",
+   "hook_alternates": ["The worst chef in the city. Or is he?", "One dinner. One critic. One missing recipe book.", "Simba said it was exactly what he meant to do."]
+  },
+  {
+   "pillar": "Cat Chef Club", "format": "carousel", "hook_type": "how-to", "is_experiment": false,
+   "hook": "The dish from Episode 1, for real: Creamy Tomato Dreams.",
+   "slides": [
+    {"title": "25 minutes, serves 2", "body": "Silky tomato sauce softened with cream, tossed through pasta with Parmesan and torn basil.", "visual": {"kind": "photo", "labels": [], "url": "https://whiskerflame.safetykat.com/agency-os/food/tomato-pasta.jpg"}},
+    {"title": "What you need", "body": "180 g pasta, 400 g chopped tomatoes, 2 garlic cloves, 60 ml double cream, 25 g Parmesan, basil, olive oil.", "visual": {"kind": "journey", "labels": ["Pasta", "Tomatoes", "Garlic", "Cream"]}},
+    {"title": "How it comes together", "body": "Garlic in warm oil for 1 minute. Tomatoes for 10. Cream, pasta and a splash of pasta water. Parmesan and basil off the heat.", "visual": {"kind": "journey", "labels": ["Garlic", "Simmer 10 min", "Toss pasta", "Parmesan"]}},
+    {"title": "Simba's version", "body": "He added the basil with his whole paw. Yours can be a little more careful.", "visual": {"kind": "character", "labels": ["simba"]}}
+   ],
+   "cta": "Save it for tonight. Full recipe at the link in bio.", "cta_type": "save",
+   "caption": "The dish that sent a food critic back for seconds in Episode 1.\n\nCreamy Tomato Dreams: silky tomato sauce, a little cream, Parmesan and torn basil. 25 minutes, serves 2.\n\nSave this for tonight, and find the full recipe with quantities and every step at the link in bio. Allergens: wheat, milk. Always check your labels.",
+   "hashtags": ["#WhiskerAndHeat", "#TomatoPasta", "#EasyDinner", "#30MinuteMeals"],
+   "alt_text": "A bowl of creamy tomato pasta with Parmesan and basil on a rustic table.",
+   "hook_alternates": ["The pasta a critic asked for twice.", "25 minutes. One pan of sauce. Dinner sorted.", "Episode 1's dish, step by step."]
+  },
+  {
+   "pillar": "Naughty Cat Café", "format": "single", "hook_type": "story", "is_experiment": true,
+   "hook": "Nico runs a perfect shift. Milo is just checking the pastries.",
+   "slides": [
+    {"title": "Naughty Cat Café", "body": "“We can resolve this with dignity.” — Nico. “I was just checking…” — Milo, mouth full.", "visual": {"kind": "character", "labels": ["nico", "milo"]}}
+   ],
+   "cta": "Who would you hire? Tell us below.", "cta_type": "comment",
+   "caption": "Every café needs a Nico: calm, polite, impossibly organised.\n\nEvery café also seems to get a Milo.\n\nThe pastries were counted at opening. The count has changed. Milo says he was just checking.\n\nWho would you hire for the morning shift?",
+   "hashtags": ["#WhiskerAndHeat", "#NaughtyCatCafe", "#CatsOfInstagram"],
+   "alt_text": "Nico the tuxedo cat holding a folded napkin beside Milo the cream cat holding a pastry.",
+   "hook_alternates": ["The pastry count has changed. Again.", "Perfect service. Imperfect colleague.", "Nico has a plan. Milo has a croissant."]
+  },
+  {
+   "pillar": "Healthy Cat Kitchen", "format": "carousel", "hook_type": "how-to", "is_experiment": false,
+   "hook": "Crispy chickpeas, cool cucumber, lemon yogurt. 35 minutes.",
+   "slides": [
+    {"title": "Crispy Chickpea & Couscous Bowls", "body": "Spiced roasted chickpeas over couscous with cucumber, tomatoes and a lemon yogurt dressing. Serves 2.", "visual": {"kind": "photo", "labels": [], "url": "https://whiskerflame.safetykat.com/agency-os/food/crispy-chickpea-bowls.jpg"}},
+    {"title": "The trick for real crunch", "body": "Dry the rinsed chickpeas well before they go in the oven. Roast 25–30 minutes, shaking halfway.", "visual": {"kind": "journey", "labels": ["Dry well", "Spice", "Roast 25 min", "Shake"]}},
+    {"title": "Build the bowl", "body": "Couscous first, then cucumber and tomatoes, hot chickpeas, lemon yogurt and parsley. Eat straight away for the crunch.", "visual": {"kind": "journey", "labels": ["Couscous", "Vegetables", "Chickpeas", "Yogurt"]}}
+   ],
+   "cta": "Save it for a weeknight. Recipe at the link in bio.", "cta_type": "save",
+   "caption": "A simple, balanced bowl for a weeknight.\n\nSmoked paprika and cumin chickpeas, roasted until crisp, over fluffy couscous with cucumber, cherry tomatoes and a quick lemon yogurt.\n\nThe one trick: dry the chickpeas properly before they roast.\n\nFull recipe at the link in bio. Allergens: wheat, milk. Check your labels.",
+   "hashtags": ["#WhiskerAndHeat", "#ChickpeaBowl", "#WeeknightDinner", "#HealthyCatKitchen"],
+   "alt_text": "Two bowls of couscous topped with crispy chickpeas, cucumber, tomatoes and yogurt.",
+   "hook_alternates": ["The chickpea trick for real crunch.", "A weeknight bowl in 35 minutes.", "Crunchy, fresh and on the table tonight."]
+  },
+  {
+   "pillar": "Budget Cat", "format": "carousel", "hook_type": "how-to", "is_experiment": false,
+   "hook": "One tray of tomatoes, one can of beans, soup for four.",
+   "slides": [
+    {"title": "Roasted Tomato & White Bean Soup", "body": "Oven-roasted tomatoes, onion and garlic blended with cannellini beans. Serves 4.", "visual": {"kind": "photo", "labels": [], "url": "https://whiskerflame.safetykat.com/agency-os/food/roasted-tomato-soup.jpg"}},
+    {"title": "The tray does the work", "body": "Tomatoes, onion and garlic with oil, salt and pepper. 30–35 minutes at 200°C, stir once.", "visual": {"kind": "journey", "labels": ["Tray", "Roast 30 min", "Beans + stock", "Blend"]}},
+    {"title": "Everyday ingredients", "body": "Tomatoes, an onion, garlic, a can of beans and stock. Nothing fancy, and very little left over.", "visual": {"kind": "character", "labels": ["milo"]}}
+   ],
+   "cta": "Save it for soup night. Recipe at the link in bio.", "cta_type": "save",
+   "caption": "Budget Cat, week one.\n\nOne tray of roasted tomatoes, onion and garlic, a can of cannellini beans and some stock. Blend, and that's soup for four.\n\nEveryday ingredients, very little waste, and Milo insists on testing every spoonful.\n\nFull recipe at the link in bio.",
+   "hashtags": ["#WhiskerAndHeat", "#BudgetCat", "#TomatoSoup", "#EverydayCooking"],
+   "alt_text": "A bowl of roasted tomato soup with basil and olive oil beside crusty bread.",
+   "hook_alternates": ["Soup for four from one tray.", "Everyday ingredients, a very good soup.", "Roast, blend, done."]
+  },
+  {
+   "pillar": "Cook, Play & Share", "format": "single", "hook_type": "question", "is_experiment": true,
+   "hook": "Who do you suspect took the lost recipe book?",
+   "slides": [
+    {"title": "Vote below", "body": "Luna has a theory. Simba has an alibi. Nico has a seating plan. Milo has crumbs.", "visual": {"kind": "character", "labels": ["luna", "simba", "nico", "milo"]}}
+   ],
+   "cta": "Comment your suspect.", "cta_type": "comment",
+   "caption": "The legendary recipe book has disappeared from a city run by cats.\n\nLuna has a theory. Simba has an alibi. Nico has a seating plan. Milo has crumbs on his apron.\n\nWho do you suspect? Comment below. Your guesses might just shape the next episode.",
+   "hashtags": ["#WhiskerAndHeat", "#TheLostRecipeBook", "#WhoDunnit"],
+   "alt_text": "Luna, Simba, Nico and Milo side by side under the question Who do you suspect took the lost recipe book?",
+   "hook_alternates": ["One missing book. Four suspects.", "Which cat would you trust with the recipe book?", "Pick your suspect."]
+  },
+  {
+   "pillar": "Purr & Presence Kitchen", "format": "single", "hook_type": "story", "is_experiment": false,
+   "hook": "Sunday, slowly: warm apple and oat crumble.",
+   "slides": [
+    {"title": "Warm Apple & Oat Crumble", "body": "Cinnamon apples under a buttery oat crumble, baked until the juices bubble. Let it stand 10 minutes; the fruit is very hot.", "visual": {"kind": "photo", "labels": [], "url": "https://whiskerflame.safetykat.com/agency-os/food/apple-oat-crumble.jpg"}}
+   ],
+   "cta": "Save it for a slow Sunday. Recipe at the link in bio.", "cta_type": "save",
+   "caption": "A slow one for Sunday.\n\nApples tossed with cinnamon and a little sugar, a crumble rubbed together by hand, and 35–40 minutes in the oven while the kitchen fills with the smell of it.\n\nLet it stand for 10 minutes before serving; the fruit will be very hot.\n\nFull recipe at the link in bio. Allergens: wheat, oats, milk.",
+   "hashtags": ["#WhiskerAndHeat", "#AppleCrumble", "#SundayBaking"],
+   "alt_text": "A golden apple and oat crumble in a baking dish with a serving in a small bowl.",
+   "hook_alternates": ["The slowest, best part of Sunday.", "Apples, oats, butter, patience.", "A crumble for a quiet afternoon."]
+  }
+ ]
+}

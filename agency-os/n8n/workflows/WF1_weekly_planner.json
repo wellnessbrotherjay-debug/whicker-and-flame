@@ -1,0 +1,703 @@
+{
+  "id": "wos-wf1",
+  "name": "Whisker OS WF1 \u2014 Weekly Planner",
+  "nodes": [
+    {
+      "id": "aa5bd8f4-b37c-4d66-8e25-c98cb7805b47",
+      "name": "Run once",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f5ee23c8-da15-4538-a827-be5aac182b67",
+      "name": "Sunday 17:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 17 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "97024858-00d2-4514-8a31-7586f2e4c6b5",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "110423d9-13f6-46a0-a5e1-8264c6bc8750",
+              "name": "tenant",
+              "value": "whisker",
+              "type": "string"
+            },
+            {
+              "id": "7b6ef8b2-69e7-4271-be15-bc9008cd1b7c",
+              "name": "graph_version",
+              "value": "v25.0",
+              "type": "string"
+            },
+            {
+              "id": "5d953492-5db0-4bc3-8e6e-d669affb0d4d",
+              "name": "model_planner",
+              "value": "gpt-4.1",
+              "type": "string"
+            },
+            {
+              "id": "6539b0a7-3d64-46fa-acf6-91f227dfbcb6",
+              "name": "model_copy",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "2934cd76-9870-4012-8500-25218e8d0cd6",
+              "name": "model_qa",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "57496f22-5a72-4651-a904-e02cd7bbb4e7",
+              "name": "wa_notice_template",
+              "value": "agency_os_notice",
+              "type": "string"
+            },
+            {
+              "id": "671ea1b5-e05e-445d-b15a-3959356dba39",
+              "name": "wa_template_lang",
+              "value": "en",
+              "type": "string"
+            },
+            {
+              "id": "e648460f-10b4-441d-b812-7909f58a15b1",
+              "name": "allowed_formats",
+              "value": "carousel,single",
+              "type": "string"
+            },
+            {
+              "id": "31a4b404-3c12-4df6-bb0e-8315aa837ac3",
+              "name": "publish_time_local",
+              "value": "18:00",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "961042fb-78c8-4d5e-9322-011ecbc00bdb",
+      "name": "Load context",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/LoadContext",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tenant: $json.tenant }) }}"
+      }
+    },
+    {
+      "id": "235b353d-0439-453e-8397-817a3ac0f282",
+      "name": "Build planner prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst cfg = $('Config').first().json;\nconst ctx = $json;\nif (!ctx.tenant_id) throw new Error(`Tenant ${cfg.tenant} not found or not active`);\nconst brand = ctx.brand ?? {};\nconst pillars = ctx.pillars ?? [];\nif (!brand.marketing_context && pillars.length === 0) {\n  throw new Error('No marketing_context and no content_pillars for this tenant. Fill them before planning \u2014 refusing to generate generic content.');\n}\nconst formats = cfg.allowed_formats.split(',').map(s => s.trim());\nconst FOOD = 'https://whiskerflame.safetykat.com/agency-os/food/';\nconst PHOTOS = ['tomato-pasta','garden-pesto-twirls','pancakes','lemon-pea-risotto','roasted-tomato-soup','mushroom-bruschetta','crispy-chickpea-bowls','spinach-ricotta-bake','sweet-potato-black-bean-chili','apple-oat-crumble'].map(n => FOOD + n + '.jpg');\nconst system = `You are the content strategist for Whisker & Heat, a cat-led cooking brand. Plan 7 Instagram posts for next week.\nCharacters (original, fictional): Luna (luna) the Taste Detective, \"Interesting\u2026 very suspicious.\"; Simba (simba) the Chaos Chef, \"That was exactly what I meant to do!\"; Nico (nico) the Kitchen Diplomat, \"We can resolve this with dignity.\"; Milo (milo) the Curious Taster, \"I was just checking\u2026\".\nRules:\n- Output ONLY valid JSON, no markdown, matching: {\"memo\": string, \"posts\": [7 items]}\n- Each post: {\"pillar\": one of the pillar names, \"format\": one of ${JSON.stringify(formats)},\n  \"hook_type\": one of [\"stat\",\"contrarian\",\"question\",\"story\",\"how-to\"], \"hook\": max 110 chars,\n  \"slides\": array of {\"title\": max 48 chars, \"body\": max 150 chars, \"visual\": one of\n     {\"kind\":\"character\",\"labels\":[1-4 of \"luna\",\"simba\",\"nico\",\"milo\"]},\n     {\"kind\":\"photo\",\"labels\":[],\"url\": one of ${JSON.stringify(PHOTOS)}},\n     {\"kind\":\"journey\",\"labels\": 2-4 short cooking steps or ingredients, each max 22 chars}} (carousel: 3-4 slides, single: exactly 1),\n  \"cta\": max 80 chars, \"cta_type\": one of [\"follow\",\"save\",\"comment\",\"dm\",\"link\"], \"is_experiment\": boolean}\n- Mix the week: one story post that moves season one (The Lost Recipe Book) forward with a real payoff, one or two recipe posts with a photo slide and real steps, character comedy, and one audience question.\n- Recipes must be real and safe; any steps shown must match the real recipe. Recipes are for people, never for cats. No medical, weight-loss or price claims. No allergy jokes.\n- Exactly 1 or 2 posts must be is_experiment=true (new hook_type x pillar combinations).\n- Weight pillars by their weight. Never repeat or closely paraphrase a recent hook.\n- Lean into what scored well (saves, shares, recipe opens), move away from what scored badly and from rejected hooks.\n- Warm and funny, never mean. Keep hooks short, preferably under 55 characters.\n- \"memo\": max 150 words \u2014 what changed vs last week and why, citing the performance data given.`;\nconst user = JSON.stringify({\n  marketing_context: brand.marketing_context ?? null, voice: brand.voice ?? {}, pillars,\n  top_posts: ctx.top_posts, bottom_posts: ctx.bottom_posts,\n  rejected_hooks: ctx.rejected_hooks, recent_hooks: ctx.recent_hooks\n});\n// deterministic cache key: FNV-1a 64-bit (no crypto module needed in the Code node)\nlet h = 0xcbf29ce484222325n;\nconst s = cfg.model_planner + system + user;\nfor (let i = 0; i < s.length; i++) { h ^= BigInt(s.charCodeAt(i)); h = (h * 0x100000001b3n) & 0xffffffffffffffffn; }\nreturn [{ json: { tenant_id: ctx.tenant_id, brand_version: brand.version ?? null, system, user,\n  prompt_hash: 'planner:' + h.toString(16) } }];"
+      }
+    },
+    {
+      "id": "d2968333-0103-4df5-8100-20bbcb9175d8",
+      "name": "Cache lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/CacheGet",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ prompthash: $json.prompt_hash }) }}"
+      }
+    },
+    {
+      "id": "3a7f430e-abea-4cf7-8375-ee69ae1c14ab",
+      "name": "Cache hit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3f5dfb9b-b7d0-48b8-8bbb-92e1ce277516",
+              "leftValue": "={{ !!$json.response }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0d30a7a0-58ac-4b46-82b2-bfc62ff76f09",
+      "name": "OpenAI \u2014 plan week",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        480
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "options": {
+          "timeout": 180000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $(\"Config\").first().json.model_planner, instructions: $(\"Build planner prompt\").first().json.system, input: \"Return JSON. \" + ($(\"Build planner prompt\").first().json.user), max_output_tokens: 8000, text: { format: { type: \"json_object\" } }, store: false }) }}"
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "magnovent-openai-2026",
+          "name": "Magnovent OpenAI"
+        }
+      }
+    },
+    {
+      "id": "5d7c7fa7-1f6c-453d-bcfe-3d1a144ae047",
+      "name": "Save to cache",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        480
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/CachePut",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ prompthash: $(\"Build planner prompt\").first().json.prompt_hash, model: $(\"Config\").first().json.model_planner, response: JSON.stringify((() => { const r = $(\"OpenAI \u2014 plan week\").first().json; if (r.status !== \"completed\") throw new Error(\"Planner incomplete\"); const t = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === \"output_text\").map(b => b.text).join(\"\").replace(/```json|```/g, \"\").trim(); try { return JSON.parse(t); } catch (e) { return null; } })()), tokensin: $(\"OpenAI \u2014 plan week\").first().json.usage?.input_tokens ?? null, tokensout: $(\"OpenAI \u2014 plan week\").first().json.usage?.output_tokens ?? null }) }}"
+      }
+    },
+    {
+      "id": "5b0981fc-3c95-427c-b76b-672c3013d1a8",
+      "name": "Parse + validate plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst cached = $('Cache lookup').first().json.response;\nlet plan;\nif (cached) { plan = cached; }\nelse {\n  const res = $('OpenAI \u2014 plan week').first().json;\n  const text = aiText(res).replace(/```json|```/g, '').trim();\n  try { plan = JSON.parse(text); } catch (e) { throw new Error('Planner returned invalid JSON: ' + text.slice(0, 300)); }\n}\nconst cfg = $('Config').first().json;\nconst formats = cfg.allowed_formats.split(',').map(s => s.trim());\nconst HOOKS = ['stat','contrarian','question','story','how-to'];\nconst CTAS = ['follow','save','comment','dm','link'];\nif (!plan || !Array.isArray(plan.posts) || plan.posts.length !== 7) throw new Error('Planner must return exactly 7 posts');\nplan.posts.forEach((p, i) => {\n  const bad = (m) => { throw new Error(`Post ${i + 1}: ${m}`); };\n  if (!formats.includes(p.format)) bad('format ' + p.format);\n  if (!HOOKS.includes(p.hook_type)) bad('hook_type ' + p.hook_type);\n  if (!CTAS.includes(p.cta_type)) bad('cta_type ' + p.cta_type);\n  if (typeof p.hook !== 'string' || p.hook.length < 10 || p.hook.length > 140) bad('hook length');\n  if (!Array.isArray(p.slides)) bad('slides');\n  if (p.format === 'carousel' && (p.slides.length < 3 || p.slides.length > 9)) bad('carousel needs 3-9 slides (cover + slides <= 10 images)');\n  if (p.format === 'single' && p.slides.length !== 1) bad('single needs exactly 1 slide');\n});\nconst base = $('Build planner prompt').first().json;\nreturn [{ json: { memo: String(plan.memo ?? '').slice(0, 2000), posts: plan.posts,\n  tenant_id: base.tenant_id, brand_version: base.brand_version, prompt_hash: base.prompt_hash,\n  from_cache: Boolean(cached) } }];"
+      }
+    },
+    {
+      "id": "bdc84f67-e7ce-4579-8dae-c7b3519f4f70",
+      "name": "Save strategy memo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/SaveMemo",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tenantid: $json.tenant_id, memo: $json.memo, mix: JSON.stringify($json.posts.map(p => ({ pillar: p.pillar, format: p.format, hook_type: p.hook_type, is_experiment: p.is_experiment }))) }) }}"
+      }
+    },
+    {
+      "id": "2293f9ea-f5f0-40ff-8d92-1f833db19f89",
+      "name": "Build caption request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst plan = $('Parse + validate plan').first().json;\nconst system = `You write Instagram captions for Whisker & Heat, a warm, funny cat-led cooking brand (fictional cats, real recipes for people). Captions end with the CTA; recipe posts say the full recipe is at the link in bio and name the allergens from the recipe. No medical, weight-loss or price claims. Output ONLY JSON:\n{\"items\":[{\"i\": number, \"caption\": string (max 1600 chars, line breaks ok, ends with the CTA),\n\"hashtags\": 3-5 strings each starting with #, niche over generic, \"alt_text\": max 200 chars describing the cover visual,\n\"hook_alternates\": exactly 3 alternative hooks max 110 chars}]} \u2014 one item per input post, same order.`;\nconst user = JSON.stringify(plan.posts.map((p, i) => ({ i, hook: p.hook, slides: p.slides, cta: p.cta, pillar: p.pillar })));\nreturn [{ json: { system, user } }];"
+      }
+    },
+    {
+      "id": "5997b15a-df2c-47fc-bf13-28d75bdb97e8",
+      "name": "OpenAI \u2014 captions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "options": {
+          "timeout": 180000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $(\"Config\").first().json.model_copy, instructions: $json.system, input: \"Return JSON. \" + ($json.user), max_output_tokens: 6000, text: { format: { type: \"json_object\" } }, store: false }) }}"
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "magnovent-openai-2026",
+          "name": "Magnovent OpenAI"
+        }
+      }
+    },
+    {
+      "id": "872e41de-2a93-4d80-947b-54a530cde48e",
+      "name": "Build QA request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst copy = $('OpenAI \u2014 captions').first().json;\nconst text = aiText(copy).replace(/```json|```/g, '').trim();\nlet items;\ntry { items = JSON.parse(text).items; } catch (e) { throw new Error('Caption model returned invalid JSON: ' + text.slice(0, 300)); }\nconst plan = $('Parse + validate plan').first().json;\nif (!Array.isArray(items) || items.length !== plan.posts.length) throw new Error('Caption count mismatch');\nconst brand = $('Load context').first().json.brand ?? {};\nconst banned = brand.voice?.banned ?? [];\nconst qa_system = `You are a brand-safety checker. Banned words/claims: ${JSON.stringify(banned)}.\nFail a post if: it contains a banned word or a guaranteed-result claim, the caption exceeds 2200 chars,\nit has more than 5 hashtags, or it makes an unverifiable numeric promise to the reader.\nReturn ONLY JSON, no prose: {\"results\":[{\"i\":number,\"pass\":boolean,\"reason\":string}]}`;\nconst qa_user = JSON.stringify(items.map((c, i) => ({ i, hook: plan.posts[i].hook, caption: c.caption, hashtags: c.hashtags })));\nreturn [{ json: { items, qa_system, qa_user } }];"
+      }
+    },
+    {
+      "id": "48665e2c-4ddd-4a52-a174-a09a623dff74",
+      "name": "OpenAI \u2014 QA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "options": {
+          "timeout": 180000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $(\"Config\").first().json.model_qa, instructions: $json.qa_system, input: \"Return JSON. \" + ($json.qa_user), max_output_tokens: 1200, text: { format: { type: \"json_object\" } }, store: false }) }}"
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "magnovent-openai-2026",
+          "name": "Magnovent OpenAI"
+        }
+      }
+    },
+    {
+      "id": "60821022-b6ea-4ce0-9fbf-72b1d240a4bd",
+      "name": "Assemble + schedule",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst cfg = $('Config').first().json;\nconst plan = $('Parse + validate plan').first().json;\nconst { items } = $('Build QA request').first().json;\nconst qaRes = $('OpenAI \u2014 QA').first().json;\nlet results;\ntry {\n  const t = aiText(qaRes).replace(/```json|```/g, '').trim();\n  results = JSON.parse(t).results ?? [];\n} catch (e) { throw new Error('QA model returned invalid JSON'); }\nconst passMap = new Map(results.map(r => [r.i, r]));\n\n// Next Monday..Sunday at publish_time_local in Asia/Makassar (UTC+8, no DST)\nconst [hh, mm] = cfg.publish_time_local.split(':').map(Number);\nconst local = new Date(Date.now() + 8 * 3600e3);\nconst dow = local.getUTCDay();                        // 0 = Sunday\nconst daysToMon = ((8 - dow) % 7) || 7;\nconst out = [];\nplan.posts.forEach((p, i) => {\n  const qa = passMap.get(i);\n  if (!qa || qa.pass !== true) return;                // failed or missing QA \u2192 not inserted\n  const when = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() + daysToMon + i, hh - 8, mm));\n  const c = items[i];\n  out.push({ post: {\n    tenant: cfg.tenant, pillar: p.pillar, brand_version: plan.brand_version, format: p.format,\n    hook: p.hook, hook_alternates: (c.hook_alternates ?? []).slice(0, 3), slides: p.slides,\n    caption: c.caption, hashtags: (c.hashtags ?? []).slice(0, 5), alt_text: c.alt_text ?? null,\n    cta: p.cta, cta_type: p.cta_type, hook_type: p.hook_type, is_experiment: Boolean(p.is_experiment),\n    length_bucket: p.format === 'single' ? 'single' : (p.slides.length <= 5 ? 'short' : 'long'),\n    scheduled_for: when.toISOString(), prompt_hash: plan.prompt_hash } });\n});\nif (out.length === 0) throw new Error('All 7 posts failed QA: ' + JSON.stringify(results).slice(0, 400));\nconst skipped = plan.posts.length - out.length;\nreturn out.map(o => ({ json: { ...o, skipped } }));"
+      }
+    },
+    {
+      "id": "a2a536d6-a431-40fc-a1a5-f34617d180f8",
+      "name": "Insert post + features + render job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/InsertPost",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ post: JSON.stringify($json.post) }) }}"
+      }
+    },
+    {
+      "id": "ab3fcd01-54b5-4773-a0a7-65b5fbf716e2",
+      "name": "Summarise",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst n = $input.all().length;\nconst skipped = $('Assemble + schedule').first().json.skipped ?? 0;\nreturn [{ json: { message: `Planned ${n} posts (${skipped} failed QA) \u2014 render jobs queued` } }];"
+      }
+    },
+    {
+      "id": "9cbe341b-2154-4054-832d-f3da150cab7b",
+      "name": "Log run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/LogWorkflow",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"WF1_weekly_planner\", runid: String($execution.id), status: \"ok\", message: String($json.message) }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Run once": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sunday 17:00": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Load context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load context": {
+      "main": [
+        [
+          {
+            "node": "Build planner prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build planner prompt": {
+      "main": [
+        [
+          {
+            "node": "Cache lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache lookup": {
+      "main": [
+        [
+          {
+            "node": "Cache hit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache hit?": {
+      "main": [
+        [
+          {
+            "node": "Parse + validate plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenAI \u2014 plan week",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI \u2014 plan week": {
+      "main": [
+        [
+          {
+            "node": "Save to cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to cache": {
+      "main": [
+        [
+          {
+            "node": "Parse + validate plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse + validate plan": {
+      "main": [
+        [
+          {
+            "node": "Save strategy memo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save strategy memo": {
+      "main": [
+        [
+          {
+            "node": "Build caption request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build caption request": {
+      "main": [
+        [
+          {
+            "node": "OpenAI \u2014 captions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI \u2014 captions": {
+      "main": [
+        [
+          {
+            "node": "Build QA request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build QA request": {
+      "main": [
+        [
+          {
+            "node": "OpenAI \u2014 QA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI \u2014 QA": {
+      "main": [
+        [
+          {
+            "node": "Assemble + schedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble + schedule": {
+      "main": [
+        [
+          {
+            "node": "Insert post + features + render job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert post + features + render job": {
+      "main": [
+        [
+          {
+            "node": "Summarise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarise": {
+      "main": [
+        [
+          {
+            "node": "Log run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {}
+}

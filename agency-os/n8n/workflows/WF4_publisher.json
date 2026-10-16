@@ -1,0 +1,1283 @@
+{
+  "id": "wos-wf4",
+  "name": "Whisker OS WF4 \u2014 Publisher",
+  "nodes": [
+    {
+      "id": "429c5cfd-2573-453f-ac64-19410e0236c5",
+      "name": "Run once",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f4ef5232-3e3a-4f22-971e-ebf60328fe20",
+      "name": "Every 15 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/15 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b503d85c-9315-4692-a9fd-16e72d71d731",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3d71e2ea-fe44-4c11-b256-60a9d98e19ef",
+              "name": "tenant",
+              "value": "whisker",
+              "type": "string"
+            },
+            {
+              "id": "8d8ba474-af57-4ec3-b5e2-3430a7c72204",
+              "name": "graph_version",
+              "value": "v25.0",
+              "type": "string"
+            },
+            {
+              "id": "57c70771-5aa0-49cb-911b-5d346c47b847",
+              "name": "model_planner",
+              "value": "gpt-4.1",
+              "type": "string"
+            },
+            {
+              "id": "59996a80-71e6-4daf-87ca-9c4095664b08",
+              "name": "model_copy",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "54544c95-9033-424a-9683-6d5a34207683",
+              "name": "model_qa",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "3215e047-f978-4c51-8729-b01a9ab9a07c",
+              "name": "wa_notice_template",
+              "value": "agency_os_notice",
+              "type": "string"
+            },
+            {
+              "id": "a3ea9fc7-6634-4417-9283-3949e143e46e",
+              "name": "wa_template_lang",
+              "value": "en",
+              "type": "string"
+            },
+            {
+              "id": "4c9b5a2d-ebca-4c04-ba11-3719e55c8445",
+              "name": "allowed_formats",
+              "value": "carousel,single",
+              "type": "string"
+            },
+            {
+              "id": "4dca1263-2b85-4517-8a63-8ca465313aeb",
+              "name": "publish_time_local",
+              "value": "18:00",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e4886bf5-ccd3-49cb-b141-52a7db7816cd",
+      "name": "Claim post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/ClaimNextPost",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tenant: $json.tenant }) }}"
+      }
+    },
+    {
+      "id": "b2c05630-58f0-4bd9-a07c-50bd27265503",
+      "name": "Post due?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f623fcb6-eb3f-4e52-a5aa-1e80ab148ace",
+              "leftValue": "={{ !!$json.post }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8661dbff-798b-4190-ac39-ca31387c58f4",
+      "name": "Prepare media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst post = $('Claim post').first().json.post;\nif (!post.ig_user_id) throw new Error('social_accounts.ig_user_id is empty for this tenant \u2014 finish Meta setup first');\nconst media = (post.assets ?? []).filter(a => a.url);\nif (post.format === 'carousel') {\n  if (media.length < 2 || media.length > 10) throw new Error(`Carousel needs 2-10 assets, has ${media.length}`);\n  return media.map(a => ({ json: { kind: 'child', url: a.url } }));\n}\nif (media.length < 1) throw new Error('No rendered asset for this post');\nreturn [{ json: { kind: post.format === 'reel' ? 'reel' : 'single', url: media[0].url } }];"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "47545232-ff93-4db5-b3f7-a1c60279da8a",
+      "name": "Route by format",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "429705f7-d796-48af-b6f8-c60ec4cef775",
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "child",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "child"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "176692b8-f4db-4d76-b7f4-0bbe3695dec6",
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "single",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "single"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9339f1a5-0005-4197-8b87-5cde9a7921d6",
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "reel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reel"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4b466ce3-09d2-4c60-911e-39706f15a947",
+      "name": "Create child container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ $(\"Claim post\").first().json.post.ig_user_id }}/media",
+        "options": {
+          "timeout": 60000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{ $json.url }}"
+            },
+            {
+              "name": "is_carousel_item",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "wos-instagram-whisker",
+          "name": "Whisker & Heat Instagram Page"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "e2d8d30f-e388-4c9a-b51a-38de1bcfbaa3",
+      "name": "Collect child ids",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        140
+      ],
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "id",
+              "renameField": true,
+              "outputFieldName": "children"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b8e81ce6-a62f-424f-9198-16aaab80b01d",
+      "name": "Create carousel container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ $(\"Claim post\").first().json.post.ig_user_id }}/media",
+        "options": {
+          "timeout": 60000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "CAROUSEL"
+            },
+            {
+              "name": "children",
+              "value": "={{ $json.children.join(\",\") }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $(\"Claim post\").first().json.post.caption }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "wos-instagram-whisker",
+          "name": "Whisker & Heat Instagram Page"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "e30d2eab-c3fa-4311-97f4-6249cefe5606",
+      "name": "Create image container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ $(\"Claim post\").first().json.post.ig_user_id }}/media",
+        "options": {
+          "timeout": 60000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{ $json.url }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $(\"Claim post\").first().json.post.caption }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "wos-instagram-whisker",
+          "name": "Whisker & Heat Instagram Page"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "005ef60a-d833-4da8-9217-654ed5f683b0",
+      "name": "Create reel container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        500
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ $(\"Claim post\").first().json.post.ig_user_id }}/media",
+        "options": {
+          "timeout": 60000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "REELS"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ $json.url }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $(\"Claim post\").first().json.post.caption }}"
+            },
+            {
+              "name": "share_to_feed",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "wos-instagram-whisker",
+          "name": "Whisker & Heat Instagram Page"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "22e248ca-db20-4ffd-8a1a-cc6131495e49",
+      "name": "Container id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        320
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\nreturn [{ json: { container_id: $input.first().json.id } }];"
+      }
+    },
+    {
+      "id": "c9fca8da-627d-4f44-81a9-2fa83791b4ab",
+      "name": "Wait 10s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2640,
+        320
+      ],
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "webhookId": "81072dc2-6240-4e8c-9da7-973668704082"
+    },
+    {
+      "id": "ef8286b2-b795-43b1-998e-dc8380fd0f18",
+      "name": "Get container status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2880,
+        320
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ $(\"Container id\").first().json.container_id }}",
+        "options": {
+          "timeout": 60000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "status_code,status"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "wos-instagram-whisker",
+          "name": "Whisker & Heat Instagram Page"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "738a33bf-de10-4a1b-a726-f46e44aa1ace",
+      "name": "Ready?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3120,
+        320
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "63f10fb3-c209-4239-8fd0-53f29932459f",
+                    "leftValue": "={{ $json.status_code }}",
+                    "rightValue": "FINISHED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "finished"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "89479990-526e-4df7-881a-10b4640e5ecc",
+                    "leftValue": "={{ $json.status_code }}",
+                    "rightValue": "ERROR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "error"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "in_progress"
+        }
+      }
+    },
+    {
+      "id": "7c393ec1-873d-49ab-add2-c58fa33f363f",
+      "name": "Poll guard (max 3 min)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        480
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nif ($runIndex >= 18) throw new Error('Container not ready after 18 polls: ' + JSON.stringify($input.first().json));\nreturn $input.all();"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "03f86328-880e-4bf9-82c6-d657a4ad9012",
+      "name": "Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3360,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ $(\"Claim post\").first().json.post.ig_user_id }}/media_publish",
+        "options": {
+          "timeout": 60000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $(\"Container id\").first().json.container_id }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "wos-instagram-whisker",
+          "name": "Whisker & Heat Instagram Page"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "9599b9e6-a64d-43fa-a43c-34e2baf00d77",
+      "name": "Get permalink",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ $json.id }}",
+        "options": {
+          "timeout": 60000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "id,permalink"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "wos-instagram-whisker",
+          "name": "Whisker & Heat Instagram Page"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "302becd0-0cc1-45df-ad61-d01aebae494b",
+      "name": "Mark published",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3840,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/MarkPostPublished",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ post: $(\"Claim post\").first().json.post.id, mediaid: $json.id, permalink: $json.permalink }) }}"
+      }
+    },
+    {
+      "id": "ba57cbd3-b69e-48e1-9638-210a511147cf",
+      "name": "Log run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/LogWorkflow",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"WF4_publisher\", runid: String($execution.id), status: \"ok\", message: String(\"published \" + $(\"Get permalink\").first().json.permalink) }) }}"
+      }
+    },
+    {
+      "id": "e49ed8dc-12e1-4f9e-8f4a-cf56675ee16c",
+      "name": "Notify published",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4320,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ ($env.AOS_WA_PHONE_NUMBER_ID || $env.MAGNOVENT_WA_PHONE_NUMBER_ID) }}/messages",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($env.AOS_WA_ACCESS_TOKEN || $env.MAGNOVENT_WA_ACCESS_TOKEN) }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: String(($env.AOS_OWNER_WHATSAPP || $env.MAGNOVENT_OWNER_WHATSAPP) ?? \"\").split(\",\")[0].replace(/\\D/g, \"\"), type: \"template\", template: { name: $(\"Config\").first().json.wa_notice_template, language: { code: $(\"Config\").first().json.wa_template_lang }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: String(\"\u2705 Posted: \" + $(\"Get permalink\").first().json.permalink).replace(/\\s*\\n+\\s*/g, \" \u00b7 \").replace(/\\t/g, \" \").replace(/ {4,}/g, \"   \").slice(0, 900) }] }] } }) }}"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "1f29b510-b7e6-4be5-93c4-ffdb71df9657",
+      "name": "Notify published in active chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4560,
+        320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ ($env.AOS_WA_PHONE_NUMBER_ID || $env.MAGNOVENT_WA_PHONE_NUMBER_ID) }}/messages",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($env.AOS_WA_ACCESS_TOKEN || $env.MAGNOVENT_WA_ACCESS_TOKEN) }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: String(($env.AOS_OWNER_WHATSAPP || $env.MAGNOVENT_OWNER_WHATSAPP) ?? \"\").split(\",\")[0].replace(/\\D/g, \"\"), type: \"text\", text: { preview_url: false, body: String(\"Whisker & Heat: your approved post is live. \" + $(\"Get permalink\").first().json.permalink).slice(0, 4000) } }) }}"
+      }
+    },
+    {
+      "id": "ce2f5f34-b0a6-412c-82e7-c468cedb291f",
+      "name": "Collect publish error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        700
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst e = $input.first().json;\nconst msg = e.error?.message ?? (e.status_code === 'ERROR' ? 'container status ERROR: ' + (e.status ?? '') : null) ?? e.message ?? JSON.stringify(e);\nreturn [{ json: { post_id: $('Claim post').first().json.post.id, error: String(msg).slice(0, 1000) } }];"
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "dcbe74d1-fce8-41a8-a210-18f4e53b3488",
+      "name": "Mark failed (retry/backoff)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/MarkPostFailed",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ post: $json.post_id, error: $json.error }) }}"
+      }
+    },
+    {
+      "id": "1232f1cb-b826-42e9-9b92-669f7384bda4",
+      "name": "Log failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3840,
+        700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/LogWorkflow",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"WF4_publisher\", runid: String($execution.id), status: \"error\", message: String($(\"Collect publish error\").first().json.error) }) }}"
+      }
+    },
+    {
+      "id": "a2422ea2-45e6-43da-8b6d-a8527aa5bbbc",
+      "name": "Alert failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ ($env.AOS_WA_PHONE_NUMBER_ID || $env.MAGNOVENT_WA_PHONE_NUMBER_ID) }}/messages",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($env.AOS_WA_ACCESS_TOKEN || $env.MAGNOVENT_WA_ACCESS_TOKEN) }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: String(($env.AOS_OWNER_WHATSAPP || $env.MAGNOVENT_OWNER_WHATSAPP) ?? \"\").split(\",\")[0].replace(/\\D/g, \"\"), type: \"template\", template: { name: $(\"Config\").first().json.wa_notice_template, language: { code: $(\"Config\").first().json.wa_template_lang }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: String(\"\u26a0\ufe0f Publish failed (\" + $(\"Mark failed (retry/backoff)\").first().json.new_status + \"): \" + $(\"Collect publish error\").first().json.error).replace(/\\s*\\n+\\s*/g, \" \u00b7 \").replace(/\\t/g, \" \").replace(/ {4,}/g, \"   \").slice(0, 900) }] }] } }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Run once": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 15 min": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Claim post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim post": {
+      "main": [
+        [
+          {
+            "node": "Post due?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post due?": {
+      "main": [
+        [
+          {
+            "node": "Prepare media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare media": {
+      "main": [
+        [
+          {
+            "node": "Route by format",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by format": {
+      "main": [
+        [
+          {
+            "node": "Create child container",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create image container",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create reel container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create child container": {
+      "main": [
+        [
+          {
+            "node": "Collect child ids",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect child ids": {
+      "main": [
+        [
+          {
+            "node": "Create carousel container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create carousel container": {
+      "main": [
+        [
+          {
+            "node": "Container id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create image container": {
+      "main": [
+        [
+          {
+            "node": "Container id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create reel container": {
+      "main": [
+        [
+          {
+            "node": "Container id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Container id": {
+      "main": [
+        [
+          {
+            "node": "Wait 10s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 10s": {
+      "main": [
+        [
+          {
+            "node": "Get container status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get container status": {
+      "main": [
+        [
+          {
+            "node": "Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ready?": {
+      "main": [
+        [
+          {
+            "node": "Publish",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Poll guard (max 3 min)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll guard (max 3 min)": {
+      "main": [
+        [
+          {
+            "node": "Wait 10s",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish": {
+      "main": [
+        [
+          {
+            "node": "Get permalink",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get permalink": {
+      "main": [
+        [
+          {
+            "node": "Mark published",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect publish error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark published": {
+      "main": [
+        [
+          {
+            "node": "Log run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log run": {
+      "main": [
+        [
+          {
+            "node": "Notify published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify published": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify published in active chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect publish error": {
+      "main": [
+        [
+          {
+            "node": "Mark failed (retry/backoff)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark failed (retry/backoff)": {
+      "main": [
+        [
+          {
+            "node": "Log failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log failure": {
+      "main": [
+        [
+          {
+            "node": "Alert failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {}
+}

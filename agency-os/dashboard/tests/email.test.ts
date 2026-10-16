@@ -1,0 +1,2 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{loginEmail}from'../server/email';
+test('email includes private link and expiry with no WhatsApp instruction',()=>{const m=loginEmail('jay@example.com','https://signaliq.agency/agency-os/signin#nonce');assert.equal(m.to,'jay@example.com');assert.match(m.html,/https:\/\/signaliq.agency\/agency-os\/signin#nonce/);assert.match(m.text,/10 minutes/);assert.doesNotMatch(m.text,/WhatsApp/)});

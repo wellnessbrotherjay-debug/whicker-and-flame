@@ -1,0 +1,498 @@
+{
+  "id": "wos-wf2",
+  "name": "Whisker OS WF2 \u2014 Carousel Render",
+  "nodes": [
+    {
+      "id": "3a20bda2-4b9b-4060-8c48-65d18c459b7f",
+      "name": "Run once",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4bc98be0-3f73-46ef-834e-fda76d308551",
+      "name": "Every 5 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/5 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c0fbb3e3-29c6-48d5-9760-3c5bdb6bd933",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bf45a807-0e47-4690-87ac-7385233de1c4",
+              "name": "tenant",
+              "value": "whisker",
+              "type": "string"
+            },
+            {
+              "id": "66bed802-d4c6-48fe-a2c9-c5fa061f1cf2",
+              "name": "graph_version",
+              "value": "v25.0",
+              "type": "string"
+            },
+            {
+              "id": "2d1493e3-3ce2-44f0-b9be-ed0979754422",
+              "name": "model_planner",
+              "value": "gpt-4.1",
+              "type": "string"
+            },
+            {
+              "id": "3a7bd276-f1f5-43ca-bb47-44d1cb454459",
+              "name": "model_copy",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "e833fbb5-f296-4024-992f-519ab5a980c6",
+              "name": "model_qa",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "2e9f835e-b3b5-44a1-a6b2-9c77d4cc6d92",
+              "name": "wa_notice_template",
+              "value": "agency_os_notice",
+              "type": "string"
+            },
+            {
+              "id": "a6a97bf2-3abe-4417-a97f-e255337589a6",
+              "name": "wa_template_lang",
+              "value": "en",
+              "type": "string"
+            },
+            {
+              "id": "e19bb360-b46f-416b-8879-8bbdce735f8b",
+              "name": "allowed_formats",
+              "value": "carousel,single",
+              "type": "string"
+            },
+            {
+              "id": "31f4ce37-a000-436f-a7d9-642985dfe5b9",
+              "name": "publish_time_local",
+              "value": "18:00",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8202f6b5-7099-493e-9a93-e0c11ebea16b",
+      "name": "Claim render job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/ClaimRenderJob",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ kinds: \"carousel,cover\" }) }}"
+      }
+    },
+    {
+      "id": "a1260411-70b7-402c-9cac-dc82ae5cf667",
+      "name": "Job claimed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7882468f-b285-4ccd-a915-c69453b6d3e2",
+              "leftValue": "={{ !!$json.job }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7e8251dc-136b-4ab4-979b-76b7f66a945c",
+      "name": "Plan slide renders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst cfg = $('Config').first().json;\nconst job = $('Claim render job').first().json.job;\n// The renderer draws slide 0 as the hook cover, then one image per slide.\nconst slides = Array.isArray(job.slides) ? job.slides : [];\nconst total = job.format === 'single' ? 1 : slides.length + 1;\nif (total > 10) throw new Error(`Post ${job.post_id} would be ${total} images; Instagram max is 10`);\nreturn Array.from({ length: total }, (_, n) => ({ json: { job_id: job.job_id, post_id: job.post_id, position: n, brand_version: job.brand_version ?? 1 } }));"
+      }
+    },
+    {
+      "id": "5423a3cd-a317-4d05-b90f-694f8d629846",
+      "name": "Render and store slide",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_RENDER_URL }}/render?post={{ $json.post_id }}&slide={{ $json.position }}&v={{ $json.brand_version }}",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "dedf7118-42d1-43eb-a163-ff9ffa236fbc",
+      "name": "Collapse to job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\nreturn [{ json: { job_id: $('Plan slide renders').first().json.job_id, slides: $input.all().length } }];"
+      }
+    },
+    {
+      "id": "72dc2765-1ca5-4aa0-9e3b-bff60bca2717",
+      "name": "Finish job (ok)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/FinishRenderJob",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ job: $json.job_id, ok: true }) }}"
+      }
+    },
+    {
+      "id": "72a78ed2-c47a-45bd-9255-90eefd58cb13",
+      "name": "Log run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/LogWorkflow",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"WF2_render\", runid: String($execution.id), status: \"ok\", message: String(\"job \" + $(\"Collapse to job\").first().json.job_id + \" -> \" + $json.result) }) }}"
+      }
+    },
+    {
+      "id": "c02b1466-b978-4cf8-849c-ee1151cf10f4",
+      "name": "Collect render error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        520
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst e = $input.first().json;\nreturn [{ json: { job_id: $('Claim render job').first().json.job.job_id,\n  error: String(e.error?.message ?? e.message ?? JSON.stringify(e)).slice(0, 1000) } }];"
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "22befbed-2da6-43c8-b342-981468d894bd",
+      "name": "Finish job (failed)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        520
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/FinishRenderJob",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ job: $json.job_id, ok: false, error: $json.error }) }}"
+      }
+    },
+    {
+      "id": "0bac1f7c-2d36-402c-bdf5-b79078afb225",
+      "name": "Alert render failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        520
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ ($env.AOS_WA_PHONE_NUMBER_ID || $env.MAGNOVENT_WA_PHONE_NUMBER_ID) }}/messages",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($env.AOS_WA_ACCESS_TOKEN || $env.MAGNOVENT_WA_ACCESS_TOKEN) }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: String(($env.AOS_OWNER_WHATSAPP || $env.MAGNOVENT_OWNER_WHATSAPP) ?? \"\").split(\",\")[0].replace(/\\D/g, \"\"), type: \"template\", template: { name: $(\"Config\").first().json.wa_notice_template, language: { code: $(\"Config\").first().json.wa_template_lang }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: String(\"\u26a0\ufe0f Render failed for job \" + $(\"Collect render error\").first().json.job_id + \": \" + $(\"Collect render error\").first().json.error).replace(/\\s*\\n+\\s*/g, \" \u00b7 \").replace(/\\t/g, \" \").replace(/ {4,}/g, \"   \").slice(0, 900) }] }] } }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Run once": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 5 min": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Claim render job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim render job": {
+      "main": [
+        [
+          {
+            "node": "Job claimed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job claimed?": {
+      "main": [
+        [
+          {
+            "node": "Plan slide renders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan slide renders": {
+      "main": [
+        [
+          {
+            "node": "Render and store slide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render and store slide": {
+      "main": [
+        [
+          {
+            "node": "Collapse to job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collect render error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collapse to job": {
+      "main": [
+        [
+          {
+            "node": "Finish job (ok)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish job (ok)": {
+      "main": [
+        [
+          {
+            "node": "Log run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect render error": {
+      "main": [
+        [
+          {
+            "node": "Finish job (failed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish job (failed)": {
+      "main": [
+        [
+          {
+            "node": "Alert render failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,319 @@
+{
+  "id": "wos-wf3a",
+  "name": "Whisker OS WF3a \u2014 Approval Digest",
+  "nodes": [
+    {
+      "id": "e92158c3-9162-4513-9635-6099fe76183b",
+      "name": "Run once",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "723b0515-ae44-4865-901e-87a79be19679",
+      "name": "Sunday 19:00 digest",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 19 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "94de4ed8-5059-4e39-a986-c36b20486b4e",
+      "name": "Daily 09:00 reminder",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        420
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b1c69013-59a8-43e1-8638-79623dd1d3d4",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f3012929-7f4c-4d48-bf6b-9e28b69e5766",
+              "name": "tenant",
+              "value": "whisker",
+              "type": "string"
+            },
+            {
+              "id": "917c1f0d-6ade-4302-a69e-0949c80096d7",
+              "name": "graph_version",
+              "value": "v25.0",
+              "type": "string"
+            },
+            {
+              "id": "b41f6814-6b11-4f13-be75-8ca9a9dd1e2f",
+              "name": "model_planner",
+              "value": "gpt-4.1",
+              "type": "string"
+            },
+            {
+              "id": "00cc3c64-9fa6-4fd6-93a7-348bc533b2d5",
+              "name": "model_copy",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "7b4da561-ad6b-475d-b23c-d1873a4172bb",
+              "name": "model_qa",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "2dfb6352-666b-428a-afaa-6d6679452194",
+              "name": "wa_notice_template",
+              "value": "agency_os_notice",
+              "type": "string"
+            },
+            {
+              "id": "5ea008e5-6f4a-49dd-aaf0-396fc3b410b1",
+              "name": "wa_template_lang",
+              "value": "en",
+              "type": "string"
+            },
+            {
+              "id": "bf64af9e-f2f3-400c-9375-ac2438578250",
+              "name": "allowed_formats",
+              "value": "carousel,single",
+              "type": "string"
+            },
+            {
+              "id": "55641233-39d5-4791-8c02-adc664087e66",
+              "name": "publish_time_local",
+              "value": "18:00",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "15287b01-fa3c-422f-8316-6351c5fa5bd6",
+      "name": "Assign approval codes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/AssignApprovalCodes",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tenant: $json.tenant }) }}"
+      }
+    },
+    {
+      "id": "193b712c-e782-4959-80b2-826ad2adeae1",
+      "name": "Build digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst posts = $json.posts ?? [];\nif (posts.length === 0) return [];                       // nothing pending \u2192 stop quietly\n// Template notice (works outside the 24h window). Replying LIST opens the window and WF3b sends the full list.\nconst text = `\ud83d\udccb Whisker & Heat: ${posts.length} post(s) waiting for approval. Reply LIST to see them, or OK all to approve everything. Unapproved posts are never auto-published.`;\nreturn [{ json: { text, count: posts.length } }];"
+      }
+    },
+    {
+      "id": "b6800c40-baeb-4dcd-aa59-c96ec4cb1cad",
+      "name": "Send digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ ($env.AOS_WA_PHONE_NUMBER_ID || $env.MAGNOVENT_WA_PHONE_NUMBER_ID) }}/messages",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($env.AOS_WA_ACCESS_TOKEN || $env.MAGNOVENT_WA_ACCESS_TOKEN) }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: String(($env.AOS_OWNER_WHATSAPP || $env.MAGNOVENT_OWNER_WHATSAPP) ?? \"\").split(\",\")[0].replace(/\\D/g, \"\"), type: \"template\", template: { name: $(\"Config\").first().json.wa_notice_template, language: { code: $(\"Config\").first().json.wa_template_lang }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: String($json.text).replace(/\\s*\\n+\\s*/g, \" \u00b7 \").replace(/\\t/g, \" \").replace(/ {4,}/g, \"   \").slice(0, 900) }] }] } }) }}"
+      }
+    },
+    {
+      "id": "f5fc44e0-3ec1-43ef-affb-05a1007104c6",
+      "name": "Log run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/LogWorkflow",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"WF3a_digest\", runid: String($execution.id), status: \"ok\", message: String(\"digest sent: \" + $(\"Build digest\").first().json.count + \" posts\") }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Run once": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sunday 19:00 digest": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 09:00 reminder": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Assign approval codes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign approval codes": {
+      "main": [
+        [
+          {
+            "node": "Build digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build digest": {
+      "main": [
+        [
+          {
+            "node": "Send digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send digest": {
+      "main": [
+        [
+          {
+            "node": "Log run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {}
+}

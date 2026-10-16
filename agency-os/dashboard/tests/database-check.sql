@@ -1,0 +1,31 @@
+begin;
+do $$
+declare tid uuid;other_tid uuid;pid uuid;actor uuid;rev timestamptz;r jsonb;
+begin
+ insert into tenants(slug,name) values('dashboard-test-'||gen_random_uuid(),'Dashboard test') returning id into tid;
+ insert into tenants(slug,name) values('dashboard-other-'||gen_random_uuid(),'Other test') returning id into other_tid;
+ select id into actor from auth.users limit 1;
+ insert into content_posts(tenant_id,hook,format,status,scheduled_for) values(tid,'Isolated dashboard test','single','pending_approval',now()+interval '1 day') returning id,updated_at into pid,rev;
+ begin perform dashboard_post_action(other_tid,pid,actor,'approve',rev);raise exception 'Cross tenant allowed';exception when no_data_found then null;end;
+ begin perform dashboard_post_action(tid,pid,actor,'approve',rev);raise exception 'Missing assets allowed';exception when raise_exception then if sqlerrm<>'Post assets are not ready' then raise;end if;end;
+ insert into post_assets(post_id,position,kind,storage_path,public_url) values(pid,0,'image','test','https://example.com/test.jpg');
+ r:=dashboard_post_action(tid,pid,actor,'approve',rev);if r->>'status'<>'approved' then raise exception 'Approval failed';end if;
+ select updated_at into rev from content_posts where id=pid;
+ begin perform dashboard_post_action(tid,pid,actor,'schedule',rev-interval '1 second',now()+interval '2 days');raise exception 'Stale allowed';exception when serialization_failure then null;end;
+ begin perform dashboard_post_action(tid,pid,actor,'schedule',rev,now()-interval '1 hour');raise exception 'Past allowed';exception when raise_exception then if sqlerrm<>'Choose a future date and time' then raise;end if;end;
+ r:=dashboard_post_action(tid,pid,actor,'schedule',rev,now()+interval '2 days');if r->>'status'<>'approved' then raise exception 'Schedule changed approval';end if;
+ update content_posts set status='publishing' where id=pid returning updated_at into rev;
+ begin perform dashboard_post_action(tid,pid,actor,'schedule',rev,now()+interval '3 days');raise exception 'Publishing change allowed';exception when serialization_failure then null;end;
+ update content_posts set status='pending_approval',scheduled_for=now()-interval '1 hour' where id=pid returning updated_at into rev;
+ begin perform dashboard_post_action(tid,pid,actor,'approve',rev);raise exception 'Due approval allowed without confirm';exception when raise_exception then if sqlerrm<>'DUE_CONFIRMATION_REQUIRED' then raise;end if;end;
+ update post_assets set kind='cover' where post_id=pid;
+ update content_posts set scheduled_for=now()+interval '1 day' where id=pid returning updated_at into rev;
+ begin perform dashboard_post_action(tid,pid,actor,'approve',rev);raise exception 'Cover accepted as publishable';exception when raise_exception then if sqlerrm<>'Post assets are not ready' then raise;end if;end;
+ update content_posts set format='carousel',slides='[{},{},{},{},{}]' where id=pid returning updated_at into rev;
+ update post_assets set kind='image' where post_id=pid;
+ insert into post_assets(post_id,position,kind,storage_path,public_url) values(pid,1,'image','test2','https://example.com/2.jpg');
+ begin perform dashboard_post_action(tid,pid,actor,'approve',rev);raise exception 'Partial carousel accepted';exception when raise_exception then if sqlerrm<>'Carousel assets are incomplete' then raise;end if;end;
+ if (select count(*) from dashboard_audit where post_id=pid)<>2 then raise exception 'Audit count wrong';end if;
+end $$;
+rollback;
+select 'passed: tenant isolation, missing assets, approval, stale revision, future schedule, state preservation, publisher lock, due confirmation, audit' as result;

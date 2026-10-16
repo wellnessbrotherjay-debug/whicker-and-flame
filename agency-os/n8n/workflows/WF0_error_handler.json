@@ -1,0 +1,216 @@
+{
+  "id": "wos-wf0",
+  "name": "Whisker OS WF0 \u2014 Error Handler",
+  "nodes": [
+    {
+      "id": "b1802eda-d978-4efc-9b44-61bec3324092",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fd5b7f48-8668-4575-b0ae-fd089e6c76e5",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e7f8573-40d6-47b4-9104-ee9c9344b881",
+              "name": "tenant",
+              "value": "whisker",
+              "type": "string"
+            },
+            {
+              "id": "589a037b-c966-4b8d-8b75-2184b057706c",
+              "name": "graph_version",
+              "value": "v25.0",
+              "type": "string"
+            },
+            {
+              "id": "7a7f3d79-7bb8-4030-98f9-01aa3dcfc851",
+              "name": "model_planner",
+              "value": "gpt-4.1",
+              "type": "string"
+            },
+            {
+              "id": "071640c1-3cb8-49b8-b1a2-bc9e3b72cc65",
+              "name": "model_copy",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "109cb4b1-91b5-43dd-95b0-8d60c2d06402",
+              "name": "model_qa",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "6908c504-c44e-487d-bf84-41c149fd87fa",
+              "name": "wa_notice_template",
+              "value": "agency_os_notice",
+              "type": "string"
+            },
+            {
+              "id": "52c63d1d-2429-4898-acb2-2f0865e706d4",
+              "name": "wa_template_lang",
+              "value": "en",
+              "type": "string"
+            },
+            {
+              "id": "b8d637fe-9a94-4ae0-9b38-5cb5d1d0de9a",
+              "name": "allowed_formats",
+              "value": "carousel,single",
+              "type": "string"
+            },
+            {
+              "id": "f1324711-cdcb-4e00-afa6-14153b816b28",
+              "name": "publish_time_local",
+              "value": "18:00",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8bcee28a-fc27-4cc4-bec7-a6bc8bb450a3",
+      "name": "Format alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function aiText(r) {\n  if (r.status !== 'completed') throw new Error('OpenAI response not completed: ' + (r.status ?? 'error'));\n  const text = (r.output ?? []).flatMap(o => o.content ?? []).filter(b => b.type === 'output_text').map(b => b.text).join('').trim();\n  if (!text) throw new Error('OpenAI response contains no output text');\n  return text;\n}\n\nconst e = $('Error Trigger').first().json;\nconst wfName = e.workflow?.name ?? 'unknown workflow';\nconst node = e.execution?.lastNodeExecuted ?? 'unknown node';\nconst msg = (e.execution?.error?.message ?? 'no message').slice(0, 500);\nconst url = e.execution?.url ?? '';\nreturn [{ json: {\n  workflow: wfName, node, message: msg, run_id: String(e.execution?.id ?? ''),\n  text: `\ud83d\udea8 Agency OS error\\nWorkflow: ${wfName}\\nNode: ${node}\\nError: ${msg}\\n${url}`\n}}];"
+      }
+    },
+    {
+      "id": "b3732912-39c9-4cec-b0e9-b26eb03a6d72",
+      "name": "Log error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHOS_API_URL }}/empire/agencyos/AgencyOSService/LogWorkflow",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHOS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: $json.workflow, runid: $json.run_id, status: \"error\", message: $json.message, payload: JSON.stringify({ node: $json.node }) }) }}"
+      }
+    },
+    {
+      "id": "97685f12-00f7-4a8e-a2a6-51b00863bbbe",
+      "name": "WhatsApp alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $(\"Config\").first().json.graph_version }}/{{ ($env.AOS_WA_PHONE_NUMBER_ID || $env.MAGNOVENT_WA_PHONE_NUMBER_ID) }}/messages",
+        "options": {
+          "timeout": 60000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($env.AOS_WA_ACCESS_TOKEN || $env.MAGNOVENT_WA_ACCESS_TOKEN) }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: String(($env.AOS_OWNER_WHATSAPP || $env.MAGNOVENT_OWNER_WHATSAPP) ?? \"\").split(\",\")[0].replace(/\\D/g, \"\"), type: \"template\", template: { name: $(\"Config\").first().json.wa_notice_template, language: { code: $(\"Config\").first().json.wa_template_lang }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: String($(\"Format alert\").first().json.text).replace(/\\s*\\n+\\s*/g, \" \u00b7 \").replace(/\\t/g, \" \").replace(/ {4,}/g, \"   \").slice(0, 900) }] }] } }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Format alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format alert": {
+      "main": [
+        [
+          {
+            "node": "Log error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log error": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Makassar",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {}
+}
